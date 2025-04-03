@@ -1,10 +1,12 @@
 package cloud.ecommerceisafabbia.repositorioJPA;
 
-import cloud.ecommerceisafabbia.objetosmodelo.Produto;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.azure.spring.data.cosmos.repository.CosmosRepository;
+
+import cloud.ecommerceisafabbia.objetosmodelo.Produto;  // Mudança do pacote e modelo
+
 @Repository
-public interface ProdutoRepository extends JpaRepository<Produto, String> {
-    // JpaRepository já fornece implementações padrão para CRUD, como save(), findById(), findAll(), delete(), etc.
+public interface ProdutoRepository extends CosmosRepository<Produto, String> {
+
 }
