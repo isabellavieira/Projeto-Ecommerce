@@ -14,7 +14,7 @@ import lombok.Data;
 public class Produto {
 
     @Id
-    private String id;
+    private String id;//teste
 
     @PartitionKey //por causa da Azure
     private String productCategory;
