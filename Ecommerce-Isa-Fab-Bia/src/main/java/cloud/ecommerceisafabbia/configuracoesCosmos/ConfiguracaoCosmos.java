@@ -28,15 +28,11 @@ public class ConfiguracaoCosmos extends AbstractCosmosConfiguration {
 
     @Bean
     public CosmosClientBuilder cosmosClientBuilder() {
-        String uri = System.getenv("COSMOS_URI");
-        String key = System.getenv("COSMOS_KEY");
-
         return new CosmosClientBuilder()
-                .endpoint(uri)
-                .key(key)
+                .endpoint(propriedades.getUri())
+                .key(propriedades.getKey())
                 .directMode(DirectConnectionConfig.getDefaultConfig());
     }
-
 
     @Bean
     public CosmosConfig cosmosConfig() {
