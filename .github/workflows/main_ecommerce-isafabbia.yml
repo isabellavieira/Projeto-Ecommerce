@@ -63,4 +63,5 @@ jobs:
           app-name: 'Ecommerce-IsaFabBia'
           slot-name: 'Production'
           package: '*.jar'
-          
+          startupCommand: 'java -jar /home/site/wwwroot/app.jar --server.port=80'
+
