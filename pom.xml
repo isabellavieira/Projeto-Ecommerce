@@ -116,6 +116,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Adiciona a classe principal para o Spring Boot -->
+                    <mainClass>cloud.ecommerceisafabbia.EcommerceIsaFabBiaApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
