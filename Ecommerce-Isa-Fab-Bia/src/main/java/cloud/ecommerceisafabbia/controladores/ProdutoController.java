@@ -56,4 +56,25 @@ public class ProdutoController {
         produtoRepository.delete(produto.get());
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    // Método para atualizar um produto pelo ID
+    @PutMapping("/{id}")
+    public ResponseEntity<Produto> atualizarProduto(@PathVariable String id, @Valid @RequestBody Produto produtoAtualizado) {
+        Optional<Produto> produtoExistente = produtoRepository.findById(id);
+
+        if (produtoExistente.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        Produto produto = produtoExistente.get();
+        produto.setProductCategory(produtoAtualizado.getProductCategory());
+        produto.setProductName(produtoAtualizado.getProductName());
+        produto.setPrice(produtoAtualizado.getPrice());
+        produto.setImageUrl(produtoAtualizado.getImageUrl());
+        produto.setProductDescription(produtoAtualizado.getProductDescription());
+
+        produtoRepository.save(produto);
+
+        return new ResponseEntity<>(produto, HttpStatus.OK);
+    }
 }
