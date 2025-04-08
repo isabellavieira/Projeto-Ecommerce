@@ -40,5 +40,5 @@ public class Endereco {
     @NotNull(message = "O usuário associado é obrigatório")
     @ManyToOne
     @JoinColumn(name = "id_usuario", referencedColumnName = "id", nullable = false)
-    private Usuario usuario;  // Relacionamento com a entidade Usuario
+    private Usuario usuario;
 }
