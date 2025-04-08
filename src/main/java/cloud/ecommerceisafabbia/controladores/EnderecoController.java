@@ -41,7 +41,7 @@ public class EnderecoController {
         if (usuarioOptional.isEmpty()) {
             return new ResponseEntity<>("Usuário não encontrado", HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(usuarioOptional.get().getEnderecos(), HttpStatus.OK);
+      return new ResponseEntity<>(usuarioOptional.get().getEnderecos(), HttpStatus.OK);
     }
 
     // Método para excluir um endereço de um usuário

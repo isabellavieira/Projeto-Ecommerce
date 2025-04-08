@@ -30,7 +30,7 @@ public class CartaoController {
             return new ResponseEntity<>("Usuário não encontrado", HttpStatus.NOT_FOUND);
         }
         cartaoRepository.save(cartao);
-        usuarioOptional.get().getCartoes().add(cartao);
+        //usuarioOptional.get().getCartoes().add(cartao);
         usuarioRepository.save(usuarioOptional.get());
         return new ResponseEntity<>("Cartão adicionado com sucesso", HttpStatus.CREATED);
     }

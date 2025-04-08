@@ -1,9 +1,7 @@
 package cloud.ecommerceisafabbia.controladores;
 
-import cloud.ecommerceisafabbia.dto.UsuarioUpdateDTO;
 import cloud.ecommerceisafabbia.objetosmodelo.Usuario;
 import cloud.ecommerceisafabbia.repositorioJPA.UsuarioRepository;
-import cloud.ecommerceisafabbia.servicos.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +16,6 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private UsuarioService usuarioService;
 
     // Método para criar um novo usuário
     @PostMapping
@@ -55,16 +50,5 @@ public class UsuarioController {
         }
         usuarioRepository.deleteById(id);
         return new ResponseEntity<>("Usuário excluído com sucesso", HttpStatus.NO_CONTENT);
-    }
-
-    // Método para atualizar um usuário pelo ID utilizando o DTO e o serviço
-    @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizarUsuario(@PathVariable Integer id,
-                                                    @RequestBody UsuarioUpdateDTO dto) {
-        Optional<Usuario> usuarioAtualizado = usuarioService.atualizarUsuario(id, dto);
-        if(usuarioAtualizado.isEmpty()){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(usuarioAtualizado.get(), HttpStatus.OK);
     }
 }

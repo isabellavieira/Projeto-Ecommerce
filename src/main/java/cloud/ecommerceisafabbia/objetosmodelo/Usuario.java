@@ -51,4 +51,5 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false, fetch = FetchType.LAZY)
     private List<Endereco> enderecos;
+
 }
