@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'microsoft'
+          distribution: 'temurin'
 
       - name: Build with Maven
         run: mvn clean install
@@ -61,7 +61,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Ecommerce-IsaFabBia'
-          slot-name: 'Production'
+          # slot-name: 'Production'
           package: '*.jar'
           startupCommand: 'java -jar /home/site/wwwroot/app.jar --server.port=80'
 
