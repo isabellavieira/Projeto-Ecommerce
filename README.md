@@ -47,7 +47,7 @@ O sistema tem como objetivo criar uma plataforma de vendas online que:
 
 ---
 
-## 3. Funcionalidades e Status de Implementação
+## Funcionalidades e Status de Implementação
 
 ### Funcionalidades Implementadas
 - **API Gateway:**
@@ -70,7 +70,7 @@ O sistema tem como objetivo criar uma plataforma de vendas online que:
 
 ---
 
-## 4. Fluxo de Trabalho do Sistema
+## Fluxo de Trabalho do Sistema
 
 1. **Cadastro do Usuário:**
    - O usuário se cadastra no e-commerce, informando os dados pessoais e os detalhes do cartão de crédito, incluindo um saldo inicial.
@@ -88,7 +88,7 @@ O sistema tem como objetivo criar uma plataforma de vendas online que:
 
 ---
 
-## 5. Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **API Gateway:** Azure API Management.
 - **Backend:** Desenvolvido e hospedado no Azure App Service.
