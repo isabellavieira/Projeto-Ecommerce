@@ -4,7 +4,8 @@
 import sys
 import traceback
 from datetime import datetime
-
+from dialogs.main_dialog import MainDialog
+from bots.dialog_bot import DialogBot
 from aiohttp import web
 from aiohttp.web import Request, Response, json_response
 from botbuilder.core import (

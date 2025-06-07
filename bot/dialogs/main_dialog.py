@@ -19,7 +19,7 @@ from botbuilder.dialogs.prompts import (
 from botbuilder.dialogs.choices import Choice
 from botbuilder.core import MessageFactory, UserState
 
-from data_models.user_profile import UserProfile
+from data_models.perfil_do_usuario import PerfilDoUsuario   
 from api.product_api import ProductAPI
 from botbuilder.schema import (
     ActionTypes,

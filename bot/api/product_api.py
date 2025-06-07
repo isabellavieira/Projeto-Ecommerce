@@ -1,5 +1,6 @@
 import requests
-import config import DefaultConfig
+import config
+from config import DefaultConfig
 
 class ProductAPI:
     def __init__(self):

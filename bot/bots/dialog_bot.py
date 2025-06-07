@@ -3,7 +3,7 @@
 
 from botbuilder.core import ActivityHandler, ConversationState, TurnContext, UserState
 from botbuilder.dialogs import Dialog
-from helpers.dialog_helper import DialogHelper
+from helpers.dialog_helper import DialogoAjudante
 
 
 class DialogBot(ActivityHandler):
@@ -44,12 +44,12 @@ class DialogBot(ActivityHandler):
         await self.user_state.save_changes(turn_context)
 
     async def on_message_activity(self, turn_context: TurnContext):
-        await DialogHelper.run_dialog(
+        await DialogoAjudante.run_dialog(
             self.dialog,
             turn_context,
             self.conversation_state.create_property("DialogState"),
         )
-    async def on_members_added_activity(self, turn_context: TurnContext):
-        # Handle the event when a new member is added to the conversation
-        await super().on_members_added(turn_context)
-        await turn_context.send_activity("Hello! I'm your bot. How can I assist you today?")
+    async def on_members_added_activity(self, members_added: list, turn_context: TurnContext):
+        for member in members_added:
+            if member.id != turn_context.activity.recipient.id:
+                await turn_context.send_activity("Hello! I'm your bot. How can I assist you today?")
