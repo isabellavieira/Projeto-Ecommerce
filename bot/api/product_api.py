@@ -14,3 +14,12 @@ class ProductAPI:
             return response.json()[0]
         else:
             return None
+
+    def search_product(self, product_name):
+        url = f"{self.base_url}/products/search"
+        params = {"name": product_name}
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None

@@ -10,3 +10,4 @@ class DefaultConfig:
     PORT = 3978
     APP_ID = os.environ.get("MicrosoftAppId", "")
     APP_PASSWORD = os.environ.get("MicrosoftAppPassword", "")
+    PRODUCT_API_URL = "http://localhost:8080"
