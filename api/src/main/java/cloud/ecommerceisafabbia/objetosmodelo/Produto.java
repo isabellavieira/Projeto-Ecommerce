@@ -26,4 +26,9 @@ public class Produto {
    // private List<String> imageUrl;
 
     private String productDescription;
+
+public void setId(String id)
+    {
+        this.id = id;
+    }
 }

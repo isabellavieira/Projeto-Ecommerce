@@ -16,6 +16,10 @@ public class PropriedadesCosmos {
 
     private String database;
 
+    public String getUri() { return uri; }
+    public String getKey() { return key; }
+    public String getDatabase() { return database; }
+    
     private boolean queryMetricsEnabled;
 
     private boolean responseDiagnosticsEnabled;
