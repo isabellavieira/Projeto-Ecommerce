@@ -2,9 +2,7 @@ package cloud.ecommerceisafabbia.objetosmodelo;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
 
-@Data
 @Entity(name = "endereco")
 public class Endereco {
 
@@ -12,33 +10,59 @@ public class Endereco {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotNull(message = "O logradouro é obrigatório")
+    @NotNull
     @Column(nullable = false, length = 255)
     private String logradouro;
 
     @Column(length = 255)
     private String complemento;
 
-    @NotNull(message = "O bairro é obrigatório")
+    @NotNull
     @Column(nullable = false, length = 100)
     private String bairro;
 
-    @NotNull(message = "A cidade é obrigatória")
+    @NotNull
     @Column(nullable = false, length = 100)
     private String cidade;
 
-    @NotNull(message = "O estado é obrigatório")
-    @Size(min = 2, max = 50, message = "O estado deve ter entre 2 e 50 caracteres")
+    @NotNull
+    @Size(min = 2, max = 50)
     @Column(nullable = false, length = 50)
     private String estado;
 
-    @NotNull(message = "O CEP é obrigatório")
-    @Pattern(regexp = "\\d{5}-\\d{3}", message = "CEP deve estar no formato 00000-000")
+    @NotNull
+    @Pattern(regexp = "\\d{5}-\\d{3}")
     @Column(nullable = false, length = 9)
     private String cep;
 
-    @NotNull(message = "O usuário associado é obrigatório")
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "id_usuario", referencedColumnName = "id", nullable = false)
     private Usuario usuario;
+
+    // Getters e Setters
+
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getLogradouro() { return logradouro; }
+    public void setLogradouro(String logradouro) { this.logradouro = logradouro; }
+
+    public String getComplemento() { return complemento; }
+    public void setComplemento(String complemento) { this.complemento = complemento; }
+
+    public String getBairro() { return bairro; }
+    public void setBairro(String bairro) { this.bairro = bairro; }
+
+    public String getCidade() { return cidade; }
+    public void setCidade(String cidade) { this.cidade = cidade; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public String getCep() { return cep; }
+    public void setCep(String cep) { this.cep = cep; }
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 }

@@ -1,10 +1,13 @@
 package cloud.ecommerceisafabbia.request;
 
-public class Usuario {
+import java.time.LocalDate;
+
+public class UsuarioRequest {
     private String nome;
     private String email;
     private String cpf;
     private String telefone;
+    private LocalDate dtNascimento;
 
     public String getNome() {
         return nome;
@@ -33,4 +36,10 @@ public class Usuario {
     public void setTelefone(String telefone) {
         this.telefone = telefone;
     }
+    public LocalDate getDtNascimento() {
+    return dtNascimento;
+}
+    public void setDtNascimento(LocalDate dtNascimento) {
+    this.dtNascimento = dtNascimento;
+}
 }

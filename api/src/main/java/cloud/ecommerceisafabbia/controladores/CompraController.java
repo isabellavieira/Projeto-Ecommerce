@@ -5,9 +5,9 @@ import cloud.ecommerceisafabbia.service.CompraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import cloud.ecommerceisafabbia.request.Usuario;
-import cloud.ecommerceisafabbia.request.Endereco;
-import cloud.ecommerceisafabbia.request.Cartao;
+import cloud.ecommerceisafabbia.request.UsuarioRequest;
+import cloud.ecommerceisafabbia.request.EnderecoRequest;
+import cloud.ecommerceisafabbia.request.CartaoRequest;
 
 
 @RestController

@@ -1,6 +1,6 @@
 package cloud.ecommerceisafabbia.request;
 
-public class Cartao {
+public class CartaoRequest  {
     private String numero;
     private String validade;
     private String cvv;

@@ -3,9 +3,9 @@ package cloud.ecommerceisafabbia.request;
 public class CompraRequest {
     private String productName;
     private double preco;
-    private Usuario usuario;
-    private Endereco endereco;
-    private Cartao cartao;
+    private UsuarioRequest usuario;
+    private EnderecoRequest endereco;
+    private CartaoRequest cartao;
 
     public String getProductName() {
         return productName;
@@ -21,24 +21,24 @@ public class CompraRequest {
         this.preco = preco;
     }
 
-    public Usuario getUsuario() {
+    public UsuarioRequest getUsuario() {
         return usuario;
     }
-    public void setUsuario(Usuario usuario) {
+    public void setUsuario(UsuarioRequest usuario) {
         this.usuario = usuario;
     }
 
-    public Endereco getEndereco() {
+    public EnderecoRequest getEndereco() {
         return endereco;
     }
-    public void setEndereco(Endereco endereco) {
+    public void setEndereco(EnderecoRequest endereco) {
         this.endereco = endereco;
     }
 
-    public Cartao getCartao() {
+    public CartaoRequest getCartao() {
         return cartao;
     }
-    public void setCartao(Cartao cartao) {
+    public void setCartao(CartaoRequest cartao) {
         this.cartao = cartao;
     }
 }

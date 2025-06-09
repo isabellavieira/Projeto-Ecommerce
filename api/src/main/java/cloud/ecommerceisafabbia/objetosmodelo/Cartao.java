@@ -2,11 +2,8 @@ package cloud.ecommerceisafabbia.objetosmodelo;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-
 import java.time.LocalDate;
 
-@Data
 @Entity(name = "cartao")
 public class Cartao {
 
@@ -14,28 +11,48 @@ public class Cartao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotNull(message = "O número do cartão é obrigatório")
-    @Pattern(regexp = "\\d{16}", message = "O número do cartão deve conter exatamente 16 dígitos")
+    @NotNull
+    @Pattern(regexp = "\\d{16}")
     @Column(nullable = false, unique = true, length = 16)
     private String numero;
 
-    @NotNull(message = "A data de expiração é obrigatória")
-    @Future(message = "A data de expiração deve ser no futuro")
+    @NotNull
+    @Future
     @Column(nullable = false)
     private LocalDate dtExpiracao;
 
-    @NotNull(message = "O código de segurança (CVV) é obrigatório")
-    @Pattern(regexp = "\\d{3}", message = "O CVV deve conter exatamente 3 dígitos")
+    @NotNull
+    @Pattern(regexp = "\\d{3}")
     @Column(nullable = false, length = 3)
     private String cvv;
 
-    @NotNull(message = "O saldo é obrigatório")
-    @DecimalMin(value = "0.0", inclusive = true, message = "O saldo não pode ser negativo")
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = true)
     @Column(nullable = false)
     private Double saldo;
 
-    @NotNull(message = "O usuário associado ao cartão é obrigatório")
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "id_usuario", referencedColumnName = "id", nullable = false)
-    private Usuario usuario;  // Relacionamento com a entidade Usuario
+    private Usuario usuario;
+
+    // Getters e Setters
+
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getNumero() { return numero; }
+    public void setNumero(String numero) { this.numero = numero; }
+
+    public LocalDate getValidade() { return dtExpiracao; }
+    public void setValidade(LocalDate dtExpiracao) { this.dtExpiracao = dtExpiracao; }
+
+    public String getCvv() { return cvv; }
+    public void setCvv(String cvv) { this.cvv = cvv; }
+
+    public Double getSaldo() { return saldo; }
+    public void setSaldo(Double saldo) { this.saldo = saldo; }
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 }

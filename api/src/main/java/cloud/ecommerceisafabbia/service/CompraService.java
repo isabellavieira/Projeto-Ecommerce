@@ -1,15 +1,25 @@
 package cloud.ecommerceisafabbia.service;
 
-import cloud.ecommerceisafabbia.objetosmodelo.*;
-import cloud.ecommerceisafabbia.repositorioJPA.*;
-import cloud.ecommerceisafabbia.request.*;
+import cloud.ecommerceisafabbia.objetosmodelo.Usuario;
+import cloud.ecommerceisafabbia.objetosmodelo.Endereco;
+import cloud.ecommerceisafabbia.objetosmodelo.Cartao;
+import cloud.ecommerceisafabbia.objetosmodelo.Produto;
+
+import cloud.ecommerceisafabbia.repositorioJPA.UsuarioRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.EnderecoRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.CartaoRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.ProdutoRepository;
+
+import cloud.ecommerceisafabbia.request.CompraRequest;
+import cloud.ecommerceisafabbia.request.UsuarioRequest;
+import cloud.ecommerceisafabbia.request.EnderecoRequest;
+import cloud.ecommerceisafabbia.request.CartaoRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import cloud.ecommerceisafabbia.request.Usuario;
-import cloud.ecommerceisafabbia.request.Endereco;
-import cloud.ecommerceisafabbia.request.Cartao;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
+import java.time.LocalDate;
 
 @Service
 public class CompraService {
@@ -21,39 +31,49 @@ public class CompraService {
 
     @Transactional
     public String processarCompra(CompraRequest request) {
-        Produto produto = produtoRepo.findByNome(request.getProductName());
-        if (produto == null || produto.getPreco() != request.getPreco()) {
-            throw new IllegalArgumentException("Produto inválido ou preço divergente");
+        // 🧠 Produto (CosmosDB)
+        Produto produto = produtoRepo.findByProductName(request.getProductName())
+            .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente"));
+
+        if (produto.getPrice() != request.getPreco()) {
+            throw new IllegalArgumentException("Preço divergente");
         }
 
-        CartaoDTO cartaoDTO = request.getCartao();
-        if (cartaoDTO.getSaldo() < produto.getPreco()) {
+        // 🧠 Cartão
+        CartaoRequest cartaoDTO = request.getCartao();
+        if (cartaoDTO.getSaldo() < produto.getPrice()) {
             throw new IllegalArgumentException("Saldo insuficiente no cartão");
         }
 
+        // 🧠 UsuarioRequest → Usuario
         Usuario usuario = new Usuario();
-        usuario.setNome(request.getUsuario().getNome());
-        usuario.setEmail(request.getUsuario().getEmail());
-        usuario.setCpf(request.getUsuario().getCpf());
-        usuario.setTelefone(request.getUsuario().getTelefone());
+        UsuarioRequest usuarioReq = request.getUsuario();
+        usuario.setNome(usuarioReq.getNome());
+        usuario.setEmail(usuarioReq.getEmail());
+        usuario.setCpf(usuarioReq.getCpf());
+        usuario.setTelefone(usuarioReq.getTelefone());
+        usuario.setDtNascimento(usuarioReq.getDtNascimento());
         usuarioRepo.save(usuario);
 
+        // 🧠 EnderecoRequest → Endereco
         Endereco endereco = new Endereco();
+        EnderecoRequest enderecoReq = request.getEndereco();
         endereco.setUsuario(usuario);
-        endereco.setLogradouro(request.getEndereco().getLogradouro());
-        endereco.setComplemento(request.getEndereco().getComplemento());
-        endereco.setBairro(request.getEndereco().getBairro());
-        endereco.setCidade(request.getEndereco().getCidade());
-        endereco.setEstado(request.getEndereco().getEstado());
-        endereco.setCep(request.getEndereco().getCep());
+        endereco.setLogradouro(enderecoReq.getLogradouro());
+        endereco.setComplemento(enderecoReq.getComplemento());
+        endereco.setBairro(enderecoReq.getBairro());
+        endereco.setCidade(enderecoReq.getCidade());
+        endereco.setEstado(enderecoReq.getEstado());
+        endereco.setCep(enderecoReq.getCep());
         enderecoRepo.save(endereco);
 
+        // 🧠 CartaoRequest → Cartao
         Cartao cartao = new Cartao();
         cartao.setUsuario(usuario);
         cartao.setNumero(cartaoDTO.getNumero());
-        cartao.setValidade(cartaoDTO.getValidade());
+        cartao.setValidade(LocalDate.parse(cartaoDTO.getValidade())); // ⚠️ cuidado com formato (yyyy-MM-dd)
         cartao.setCvv(cartaoDTO.getCvv());
-        cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPreco());
+        cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPrice());
         cartaoRepo.save(cartao);
 
         return "Compra realizada com sucesso!";

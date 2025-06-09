@@ -1,6 +1,6 @@
 package cloud.ecommerceisafabbia.request;
 
-public class Endereco {
+public class EnderecoRequest {
     private String logradouro;
     private String complemento;
     private String bairro;
