@@ -47,7 +47,7 @@ class ConsultarProdutosDialog(ComponentDialog):
                         buttons=[CardAction(
                             type=ActionTypes.im_back,
                             title=f"Comprar {produto['productName']}",
-                            value=produto["id"]
+                            value=f"Comprar {produto['productName']}"
                         )]
                     )
                 )
