@@ -1,15 +1,15 @@
-import requests
-import config import DefaultConfig
+from azure.cosmos import CosmosClient
+from bot.config import DefaultConfig
+
+config = DefaultConfig()
+client = CosmosClient(config.COSMOS_URI, config.COSMOS_KEY)
+db = client.get_database_client(config.DATABASE_NAME)
+container = db.get_container_client(config.CONTAINER_NAME)
 
 class ProductAPI:
-    def __init__(self):
-        self.config = DefaultConfig()
-        self.base_url = self.config.PRODUCT_API_URL
-
-    def get_product(self, product_id):
-        url = f"{self.base_url}/products/{product_id}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()[0]
-        else:
-            return None
+    def get_products(self):
+        query = "SELECT * FROM c"
+        results = list(container.query_items(query=query, enable_cross_partition_query=True))
+        if results:
+            return results[0]  # simplificação: pega o primeiro resultado
+        return {}

@@ -1,10 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+import os
 import sys
 import traceback
 from datetime import datetime
-
+from bot.bots.dialog_bot import DialogBot
+from bot.dialogs.main_dialog import MainDialog
+from bot.config import DefaultConfig
 from aiohttp import web
 from aiohttp.web import Request, Response, json_response
 from botbuilder.core import (
@@ -17,10 +19,7 @@ from botbuilder.core import (
 )
 from botbuilder.core.integration import aiohttp_error_middleware
 from botbuilder.schema import Activity, ActivityTypes
-
-from bot import MyBot
-from config import DefaultConfig
-
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 CONFIG = DefaultConfig()
 
 # Create adapter.

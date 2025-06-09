@@ -1,6 +1,3 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-
 from botbuilder.dialogs import (
     ComponentDialog,
     WaterfallDialog,
@@ -8,28 +5,17 @@ from botbuilder.dialogs import (
     DialogTurnResult,
 )
 from botbuilder.dialogs.prompts import (
-    TextPrompt,
-    NumberPrompt,
     ChoicePrompt,
     ConfirmPrompt,
-    AttachmentPrompt,
     PromptOptions,
-    PromptValidatorContext,
 )
 from botbuilder.dialogs.choices import Choice
 from botbuilder.core import MessageFactory, UserState
-
-from data_models.user_profile import UserProfile
-from api.product_api import ProductAPI
-from botbuilder.schema import (
-    ActionTypes,
-    HeroCard,
-    CardAction,
-    CardImage,
-)
-
+from bot.api.product_api import ProductAPI
+from botbuilder.schema import HeroCard, CardAction, CardImage, ActionTypes
 from botbuilder.core import CardFactory
-from dialogs.consultar_produtos_dialog import ConsultarProdutosDialog
+from bot.dialogs.consultar_produtos_dialog import ConsultarProdutosDialog
+
 
 
 
@@ -85,26 +71,26 @@ class MainDialog(ComponentDialog):
 
     async def show_card_produtos(self, turn_context):
         produto_api = ProductAPI()
-
         response = produto_api.get_products()
 
-        #Montando o card
+        if not response:
+            await turn_context.send_activity("Nenhum produto encontrado.")
+            return
         card = CardFactory.hero_card(
             HeroCard(
-                title=response["productName"],
-                text=f"Preço: R$ {response['price']}",
-                subtitle=response["productDescription"],
-                images=[CardImage(url=produto) for produto in response["imageUrl"]],
-                buttons=[
-                    CardAction(
-                        type=ActionTypes.im_back,
-                        title=f"Comprar {response["productName"]}",
-                        value=response["id"],
-                    )
-                ],
-            )
+            title=response["productName"],
+            text=f"Preço: R$ {response['price']}",
+            subtitle=response["productDescription"],
+            images=[CardImage(url=img) for img in response["imageUrl"]],
+            buttons=[
+                CardAction(
+                    type=ActionTypes.im_back,
+                    title=f"Comprar {response['productName']}",
+                    value=response["id"]
+                )
+            ]
         )
-
-        return await turn_context.send_activity(MessageFactory.attachment(card))    
+    )
+        await turn_context.send_activity(MessageFactory.attachment(card))
 
        

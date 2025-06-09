@@ -1,4 +1,7 @@
+
+from bot.api.product_api import ProductAPI
 from botbuilder.dialogs import ComponentDialog, WaterfallDialog, WaterfallStepContext
+from botbuilder.core import MessageFactory
 
 class ConsultarProdutosDialog (ComponentDialog):
     def __init__(self):
