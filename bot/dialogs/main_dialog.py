@@ -54,8 +54,10 @@ class MainDialog(ComponentDialog):
         if option == "Consultar Pedidos":
             await step_context.context.send_activity("Você escolheu Consultar Pedidos.")
         elif option == "Consultar Produtos":
-            return await step_context.begin_dialog(ConsultarProdutosDialog.__name__)
+            return await step_context.begin_dialog("ConsultarProdutosDialog")
+
         elif option == "Extrato de Compras":
             await step_context.context.send_activity("Você escolheu Extrato de Compras.")
+
 
         return await step_context.end_dialog()
