@@ -4,11 +4,13 @@ import cloud.ecommerceisafabbia.objetosmodelo.Usuario;
 import cloud.ecommerceisafabbia.objetosmodelo.Endereco;
 import cloud.ecommerceisafabbia.objetosmodelo.Cartao;
 import cloud.ecommerceisafabbia.objetosmodelo.Produto;
+import cloud.ecommerceisafabbia.objetosmodelo.Pedido;
 
 import cloud.ecommerceisafabbia.repositorioJPA.UsuarioRepository;
 import cloud.ecommerceisafabbia.repositorioJPA.EnderecoRepository;
 import cloud.ecommerceisafabbia.repositorioJPA.CartaoRepository;
 import cloud.ecommerceisafabbia.repositorioJPA.ProdutoRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.PedidoRepository;
 
 import cloud.ecommerceisafabbia.request.CompraRequest;
 import cloud.ecommerceisafabbia.request.UsuarioRequest;
@@ -20,20 +22,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Service
 public class CompraService {
 
-    @Autowired private UsuarioRepository usuarioRepo;
-    @Autowired private EnderecoRepository enderecoRepo;
-    @Autowired private CartaoRepository cartaoRepo;
-    @Autowired private ProdutoRepository produtoRepo;
+    @Autowired
+    private UsuarioRepository usuarioRepo;
+    @Autowired
+    private EnderecoRepository enderecoRepo;
+    @Autowired
+    private CartaoRepository cartaoRepo;
+    @Autowired
+    private ProdutoRepository produtoRepo;
+    @Autowired
+    private PedidoRepository pedidoRepository;  // Adicionando o PedidoRepository
 
     @Transactional
     public String processarCompra(CompraRequest request) {
         // 🧠 Produto (CosmosDB)
         Produto produto = produtoRepo.findByProductName(request.getProductName())
-            .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente"));
+            .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente!"));
 
         if (produto.getPrice() != request.getPreco()) {
             throw new IllegalArgumentException("Preço divergente");
@@ -71,10 +81,21 @@ public class CompraService {
         Cartao cartao = new Cartao();
         cartao.setUsuario(usuario);
         cartao.setNumero(cartaoDTO.getNumero());
-        cartao.setValidade(LocalDate.parse(cartaoDTO.getValidade())); // ⚠️ cuidado com formato (yyyy-MM-dd)
+        cartao.setValidade(LocalDate.parse(cartaoDTO.getValidade()));  // ⚠️ Cuidado com formato (yyyy-MM-dd)
         cartao.setCvv(cartaoDTO.getCvv());
         cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPrice());
         cartaoRepo.save(cartao);
+
+        // 🧠 Salvar o pedido no Cosmos DB (Pedido)
+        Pedido pedido = new Pedido();
+        pedido.setId(UUID.randomUUID().toString());
+        pedido.setProductName(produto.getProductName());
+        pedido.setPreco(produto.getPrice());
+        pedido.setUsuarioId(usuario.getId());  // Usando o ID do usuário
+        pedido.setDataTransacao(LocalDateTime.now());
+        pedido.setStatus("Concluída");
+
+        pedidoRepository.save(pedido);
 
         return "Compra realizada com sucesso!";
     }

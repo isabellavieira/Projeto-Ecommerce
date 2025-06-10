@@ -40,14 +40,15 @@ class CompraDialog(ComponentDialog):
         step.values["productName"] = step.options["productName"]
         step.values["preco"] = step.options["preco"]
         return await step.prompt("TextPrompt", PromptOptions(
-            prompt=MessageFactory.text(f"Deseja confirmar a compra de {step.values['productName']} por R$ {step.values['preco']}? (sim/não)")
-        ))
+        prompt=MessageFactory.text(f"Deseja confirmar a compra de {step.values['productName']} por R$ {step.values['preco']}? (sim/não) ")
+    ))
 
     async def coletar_nome(self, step: WaterfallStepContext):
         if step.result.lower() != "sim":
             await step.context.send_activity("Compra cancelada.")
-            return await step.end_dialog()
+            return await step.replace_dialog("MainDialog")  # Redireciona ao menu principal ou ao início
         return await step.prompt("TextPrompt", PromptOptions(prompt=MessageFactory.text("Informe seu nome completo:")))
+
 
     async def coletar_email(self, step: WaterfallStepContext):
         step.values["nome"] = step.result
@@ -107,7 +108,7 @@ class CompraDialog(ComponentDialog):
         payload = {
             "productName": step.values["productName"],
             "preco": step.values["preco"],
-            "usuario": {
+            "usuario": {    
                 "nome": step.values["nome"],
                 "email": step.values["email"],
                 "cpf": step.values["cpf"],

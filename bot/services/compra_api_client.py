@@ -11,3 +11,4 @@ async def enviar_compra(payload):
             return False, f"❌ Erro desconhecido: {response.status_code}"
     except requests.RequestException as e:
         return False, f"🔥 Falha na comunicação com o servidor: {str(e)}"
+

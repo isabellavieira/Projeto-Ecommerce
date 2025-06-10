@@ -46,16 +46,17 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Azure CosmosDB -->
+        <!-- Azure CosmosDB Starter -->
         <dependency>
             <groupId>com.azure.spring</groupId>
             <artifactId>spring-cloud-azure-starter-data-cosmos</artifactId>
         </dependency>
 
-        <!-- Azure Storage (se usar arquivos na nuvem) -->
+        <!-- Test dependencies -->
         <dependency>
-            <groupId>com.azure.spring</groupId>
-            <artifactId>spring-cloud-azure-starter-storage</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- MySQL Driver -->
@@ -65,11 +66,14 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 Database (testes locais) -->
+        <!-- SLF4J for logging -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
 
         <!-- Spring Devtools (recarrega automático) -->
@@ -77,7 +81,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
-            <optional>true</optional>
         </dependency>
 
         <!-- Lombok -->
@@ -87,11 +90,18 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Teste -->
+        <!-- Hibernate Core (Se necessário para JPA) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>6.6.11.Final</version> <!-- Versão atualizada -->
+        </dependency>
+
+        <!-- H2 Database (testes locais) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 

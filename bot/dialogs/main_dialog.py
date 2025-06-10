@@ -63,27 +63,43 @@ class MainDialog(ComponentDialog):
             await step_context.context.send_activity("Você escolheu Extrato de Compras.")
             
         return await step_context.end_dialog()
-    
+
     async def on_continue_dialog(self, inner_dc):
         print("⚙️ Mensagem recebida:", inner_dc.context.activity.text)
 
         message = inner_dc.context.activity.text.strip()
+        nome_produto = None
 
         if message.startswith("Comprar "):
             nome_produto = message.replace("Comprar", "").strip()
+
+        # Verificação para garantir que o nome do produto seja válido
+            if not nome_produto or len(nome_produto) < 2:
+                await inner_dc.context.send_activity("⚠️ Nome do produto inválido. Por favor, informe um nome de produto válido.")
+                return await inner_dc.end_dialog()
+
+        # Buscar os produtos no Cosmos DB
             produtos = ProductAPI().buscar_por_nome(nome_produto)
 
             if produtos:
-                produto = produtos[0]
-                preco = produto.get("price", "0.0")
+                produto_encontrado = None
+                for produto in produtos:
+                    if nome_produto.lower() in produto["productName"].lower():
+                        produto_encontrado = produto
+                        break
 
-                return await inner_dc.begin_dialog("compraDialog", {
-                "productName": produto["productName"],
-                "preco": preco
-            })
-
-            await inner_dc.context.send_activity("❌ Produto não encontrado.")
-            return await inner_dc.end_dialog()
-
-        return await super().on_continue_dialog(inner_dc)  # ✅
+                if produto_encontrado:
+                    preco = produto_encontrado.get("price", "0.0")
+                    return await inner_dc.begin_dialog("compraDialog", {
+                    "productName": produto_encontrado["productName"],
+                    "preco": preco
+                })
+                else:
+                    await inner_dc.context.send_activity(f"❌ Produto com nome '{nome_produto}' não encontrado.")
+                    return await inner_dc.end_dialog()
+            else:
+                await inner_dc.context.send_activity("❌ Produto não encontrado.")
+                return await inner_dc.end_dialog()
+    
+        return await super().on_continue_dialog(inner_dc)
 

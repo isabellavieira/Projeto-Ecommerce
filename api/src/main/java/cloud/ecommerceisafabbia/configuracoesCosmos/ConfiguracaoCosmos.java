@@ -1,5 +1,7 @@
 package cloud.ecommerceisafabbia.configuracoesCosmos;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,8 @@ import com.azure.spring.data.cosmos.repository.config.EnableReactiveCosmosReposi
 @PropertySource("classpath:application.properties")
 public class ConfiguracaoCosmos extends AbstractCosmosConfiguration {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConfiguracaoCosmos.class);  // Loggers SLF4J
+
     private PropriedadesCosmos propriedades;
 
     public ConfiguracaoCosmos(PropriedadesCosmos propriedades) {
@@ -28,10 +32,19 @@ public class ConfiguracaoCosmos extends AbstractCosmosConfiguration {
 
     @Bean
     public CosmosClientBuilder cosmosClientBuilder() {
-        return new CosmosClientBuilder()
-                .endpoint(propriedades.getUri())
-                .key(propriedades.getKey())
-                .directMode(DirectConnectionConfig.getDefaultConfig());
+        try {
+            logger.info("Tentando conectar ao Cosmos DB com o endpoint: {}", propriedades.getUri());
+            // Tentativa de construção do cliente Cosmos
+            return new CosmosClientBuilder()
+                    .endpoint(propriedades.getUri())
+                    .key(propriedades.getKey())
+                    .directMode(DirectConnectionConfig.getDefaultConfig());
+
+        } catch (Exception e) {
+            // Log de erro caso falhe a conexão
+            logger.error("Falha na conexão com o Cosmos DB: {}", e.getMessage());
+            throw new RuntimeException("Falha ao tentar conectar ao Cosmos DB", e);  // Lançar exceção para interromper a execução
+        }
     }
 
     @Bean
@@ -39,8 +52,14 @@ public class ConfiguracaoCosmos extends AbstractCosmosConfiguration {
         return CosmosConfig.builder().build();
     }
 
+    // Container para produtos
     @Override
     protected String getDatabaseName() {
         return this.propriedades.getDatabase();
+    }
+
+    public String getContainerName() {
+        // Retorna o nome do container dependendo do tipo de documento
+        return "produtos";  // Para produtos, o container é "produtos"
     }
 }
