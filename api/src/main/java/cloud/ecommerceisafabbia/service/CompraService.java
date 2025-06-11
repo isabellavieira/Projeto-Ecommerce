@@ -7,11 +7,10 @@ import cloud.ecommerceisafabbia.objetosmodelo.Produto;
 import cloud.ecommerceisafabbia.objetosmodelo.Pedido;
 
 import cloud.ecommerceisafabbia.repositorioJPA.UsuarioRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.cosmos.PedidoRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.cosmos.ProdutoRepository;
 import cloud.ecommerceisafabbia.repositorioJPA.EnderecoRepository;
 import cloud.ecommerceisafabbia.repositorioJPA.CartaoRepository;
-import cloud.ecommerceisafabbia.repositorioJPA.ProdutoRepository;
-import cloud.ecommerceisafabbia.repositorioJPA.PedidoRepository;
-
 import cloud.ecommerceisafabbia.request.CompraRequest;
 import cloud.ecommerceisafabbia.request.UsuarioRequest;
 import cloud.ecommerceisafabbia.request.EnderecoRequest;
@@ -20,10 +19,10 @@ import cloud.ecommerceisafabbia.request.CartaoRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.UUID;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Service
 public class CompraService {
@@ -37,37 +36,39 @@ public class CompraService {
     @Autowired
     private ProdutoRepository produtoRepo;
     @Autowired
-    private PedidoRepository pedidoRepository;  // Adicionando o PedidoRepository
+    private PedidoRepository pedidoRepository;
 
     @Transactional
     public String processarCompra(CompraRequest request) {
         // 🧠 Produto (CosmosDB)
         Produto produto = produtoRepo.findByProductName(request.getProductName())
-            .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente!"));
+                .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente!"));
 
         if (produto.getPrice() != request.getPreco()) {
             throw new IllegalArgumentException("Preço divergente");
         }
 
-        // 🧠 Cartão
+        // 🧠 Validação de saldo
         CartaoRequest cartaoDTO = request.getCartao();
         if (cartaoDTO.getSaldo() < produto.getPrice()) {
             throw new IllegalArgumentException("Saldo insuficiente no cartão");
         }
 
-        // 🧠 UsuarioRequest → Usuario
-        Usuario usuario = new Usuario();
+        // 🧠 Cria e salva usuário
         UsuarioRequest usuarioReq = request.getUsuario();
+        Usuario usuario = new Usuario();
         usuario.setNome(usuarioReq.getNome());
         usuario.setEmail(usuarioReq.getEmail());
         usuario.setCpf(usuarioReq.getCpf());
         usuario.setTelefone(usuarioReq.getTelefone());
-        usuario.setDtNascimento(usuarioReq.getDtNascimento());
+        if (usuarioReq.getDtNascimento() != null) {
+            usuario.setDtNascimento(usuarioReq.getDtNascimento());
+        }
         usuarioRepo.save(usuario);
 
-        // 🧠 EnderecoRequest → Endereco
-        Endereco endereco = new Endereco();
+        // 🧠 Cria e salva endereço
         EnderecoRequest enderecoReq = request.getEndereco();
+        Endereco endereco = new Endereco();
         endereco.setUsuario(usuario);
         endereco.setLogradouro(enderecoReq.getLogradouro());
         endereco.setComplemento(enderecoReq.getComplemento());
@@ -77,24 +78,25 @@ public class CompraService {
         endereco.setCep(enderecoReq.getCep());
         enderecoRepo.save(endereco);
 
-        // 🧠 CartaoRequest → Cartao
+        // 🧠 Cria e salva cartão: parse MM/yy
         Cartao cartao = new Cartao();
         cartao.setUsuario(usuario);
         cartao.setNumero(cartaoDTO.getNumero());
-        cartao.setValidade(LocalDate.parse(cartaoDTO.getValidade()));  // ⚠️ Cuidado com formato (yyyy-MM-dd)
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM/yy");
+        YearMonth ym = YearMonth.parse(cartaoDTO.getValidade(), fmt);
+        cartao.setDtExpiracao(ym.atDay(1)); // usa o primeiro dia do mês
         cartao.setCvv(cartaoDTO.getCvv());
         cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPrice());
         cartaoRepo.save(cartao);
 
-        // 🧠 Salvar o pedido no Cosmos DB (Pedido)
+        // 🧠 Salvar pedido no Cosmos DB
         Pedido pedido = new Pedido();
         pedido.setId(UUID.randomUUID().toString());
         pedido.setProductName(produto.getProductName());
         pedido.setPreco(produto.getPrice());
-        pedido.setUsuarioId(usuario.getId());  // Usando o ID do usuário
+        pedido.setUsuarioId(usuario.getId());
         pedido.setDataTransacao(LocalDateTime.now());
         pedido.setStatus("Concluída");
-
         pedidoRepository.save(pedido);
 
         return "Compra realizada com sucesso!";

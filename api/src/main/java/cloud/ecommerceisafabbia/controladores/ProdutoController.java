@@ -1,7 +1,7 @@
 package cloud.ecommerceisafabbia.controladores;
 
 import cloud.ecommerceisafabbia.objetosmodelo.Produto;
-import cloud.ecommerceisafabbia.repositorioJPA.ProdutoRepository;
+import cloud.ecommerceisafabbia.repositorioJPA.cosmos.ProdutoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

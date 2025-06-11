@@ -1,4 +1,5 @@
 package cloud.ecommerceisafabbia.objetosmodelo;
+
 import org.springframework.data.annotation.Id;
 import com.azure.spring.data.cosmos.core.mapping.Container;
 import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
@@ -9,14 +10,14 @@ import java.time.LocalDateTime;
 public class Pedido {
 
     @Id
-    private String id;  // ID único do pedido
+    private String id; // ID único do pedido
     private String productName;
     private double preco;
     private LocalDateTime dataTransacao;
-    private String status;  // Status da compra (por exemplo, "Concluída")
+    private String status; // Status da compra (por exemplo, "Concluída")
 
     @PartitionKey
-    private String usuarioId;  // PartitionKey para otimizar as consultas por usuário
+    private int usuarioId; // PartitionKey para otimizar as consultas por usuário
 
     // Getters e setters
     public String getId() {
@@ -43,11 +44,11 @@ public class Pedido {
         this.preco = preco;
     }
 
-    public String getUsuarioId() {
+    public int getUsuarioId() {
         return usuarioId;
     }
 
-    public void setUsuarioId(String usuarioId) {
+    public void setUsuarioId(int usuarioId) {
         this.usuarioId = usuarioId;
     }
 

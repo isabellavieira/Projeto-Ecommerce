@@ -5,10 +5,10 @@ import cloud.ecommerceisafabbia.objetosmodelo.Usuario;
 import cloud.ecommerceisafabbia.repositorioJPA.EnderecoRepository;
 import cloud.ecommerceisafabbia.repositorioJPA.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -21,41 +21,56 @@ public class EnderecoController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // Método para adicionar um novo endereço
+    /**
+     * Cria um novo endereço e associa ao usuário, retornando o usuário atualizado.
+     */
     @PostMapping
-    public ResponseEntity<String> adicionarEndereco(@PathVariable("id_usuario") int idUsuario, @RequestBody Endereco endereco) {
-        Optional<Usuario> usuarioOptional = usuarioRepository.findById(idUsuario);
-        if (usuarioOptional.isEmpty()) {
-            return new ResponseEntity<>("Usuário não encontrado", HttpStatus.NOT_FOUND);
+    public ResponseEntity<Usuario> criarEndereco(
+            @PathVariable("id_usuario") int idUsuario,
+            @RequestBody Endereco endereco
+    ) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        enderecoRepository.save(endereco);
-        usuarioOptional.get().getEnderecos().add(endereco);
-        usuarioRepository.save(usuarioOptional.get());
-        return new ResponseEntity<>("Endereço adicionado com sucesso", HttpStatus.CREATED);
+        Usuario usuario = usuarioOpt.get();
+        Endereco salvo = enderecoRepository.save(endereco);
+        usuario.getEnderecos().add(salvo);
+        usuarioRepository.save(usuario);
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
     }
 
-    // Método para buscar todos os endereços de um usuário
+    /**
+     * Lista todos os endereços de um usuário.
+     */
     @GetMapping
-    public ResponseEntity<?> obterEnderecos(@PathVariable("id_usuario") int idUsuario) {
-        Optional<Usuario> usuarioOptional = usuarioRepository.findById(idUsuario);
-        if (usuarioOptional.isEmpty()) {
-            return new ResponseEntity<>("Usuário não encontrado", HttpStatus.NOT_FOUND);
+    public ResponseEntity<List<Endereco>> listarEnderecos(
+            @PathVariable("id_usuario") int idUsuario
+    ) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-      return new ResponseEntity<>(usuarioOptional.get().getEnderecos(), HttpStatus.OK);
+        List<Endereco> enderecos = usuarioOpt.get().getEnderecos();
+        return ResponseEntity.ok(enderecos);
     }
 
-    // Método para excluir um endereço de um usuário
+    /**
+     * Exclui um endereço de um usuário.
+     */
     @DeleteMapping("/{id_endereco}")
-    public ResponseEntity<String> excluirEndereco(@PathVariable("id_usuario") int idUsuario, @PathVariable("id_endereco") int idEndereco) {
-        Optional<Usuario> usuarioOptional = usuarioRepository.findById(idUsuario);
-        if (usuarioOptional.isEmpty()) {
-            return new ResponseEntity<>("Usuário não encontrado", HttpStatus.NOT_FOUND);
+    public ResponseEntity<Void> excluirEndereco(
+            @PathVariable("id_usuario") int idUsuario,
+            @PathVariable("id_endereco") int idEndereco
+    ) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(idUsuario);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        Optional<Endereco> enderecoOptional = enderecoRepository.findById(idEndereco);
-        if (enderecoOptional.isEmpty()) {
-            return new ResponseEntity<>("Endereço não encontrado", HttpStatus.NOT_FOUND);
+        if (!enderecoRepository.existsById(idEndereco)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         enderecoRepository.deleteById(idEndereco);
-        return new ResponseEntity<>("Endereço excluído com sucesso", HttpStatus.NO_CONTENT);
+        return ResponseEntity.noContent().build();
     }
 }

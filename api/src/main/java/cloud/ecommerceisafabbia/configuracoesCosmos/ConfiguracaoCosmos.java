@@ -16,7 +16,7 @@ import com.azure.spring.data.cosmos.repository.config.EnableReactiveCosmosReposi
 
 @Configuration
 @EnableConfigurationProperties(PropriedadesCosmos.class)
-@EnableCosmosRepositories(basePackages = "cloud.ecommerceisafabbia.repositorioJPA")
+@EnableCosmosRepositories(basePackages = "cloud.ecommerceisafabbia.repositorioJPA.cosmos")
 @EnableReactiveCosmosRepositories
 @PropertySource("classpath:application.properties")
 public class ConfiguracaoCosmos extends AbstractCosmosConfiguration {
@@ -52,14 +52,8 @@ public class ConfiguracaoCosmos extends AbstractCosmosConfiguration {
         return CosmosConfig.builder().build();
     }
 
-    // Container para produtos
     @Override
     protected String getDatabaseName() {
         return this.propriedades.getDatabase();
-    }
-
-    public String getContainerName() {
-        // Retorna o nome do container dependendo do tipo de documento
-        return "produtos";  // Para produtos, o container é "produtos"
-    }
+}
 }

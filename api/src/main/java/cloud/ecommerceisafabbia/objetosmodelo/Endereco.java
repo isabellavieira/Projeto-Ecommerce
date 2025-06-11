@@ -3,7 +3,8 @@ package cloud.ecommerceisafabbia.objetosmodelo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
-@Entity(name = "endereco")
+@Entity
+@Table(name = "endereco")
 public class Endereco {
 
     @Id
@@ -36,12 +37,11 @@ public class Endereco {
     private String cep;
 
     @NotNull
-    @ManyToOne
-    @JoinColumn(name = "id_usuario", referencedColumnName = "id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
     // Getters e Setters
-
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

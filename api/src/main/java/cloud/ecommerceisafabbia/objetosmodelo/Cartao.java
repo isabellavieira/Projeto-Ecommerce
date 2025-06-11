@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
-@Entity(name = "cartao")
+@Entity
+@Table(name = "cartao")
 public class Cartao {
 
     @Id
@@ -18,7 +19,7 @@ public class Cartao {
 
     @NotNull
     @Future
-    @Column(nullable = false)
+    @Column(name = "dt_expiracao", nullable = false)
     private LocalDate dtExpiracao;
 
     @NotNull
@@ -32,20 +33,19 @@ public class Cartao {
     private Double saldo;
 
     @NotNull
-    @ManyToOne
-    @JoinColumn(name = "id_usuario", referencedColumnName = "id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
     // Getters e Setters
-
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
     public String getNumero() { return numero; }
     public void setNumero(String numero) { this.numero = numero; }
 
-    public LocalDate getValidade() { return dtExpiracao; }
-    public void setValidade(LocalDate dtExpiracao) { this.dtExpiracao = dtExpiracao; }
+    public LocalDate getDtExpiracao() { return dtExpiracao; }
+    public void setDtExpiracao(LocalDate dtExpiracao) { this.dtExpiracao = dtExpiracao; }
 
     public String getCvv() { return cvv; }
     public void setCvv(String cvv) { this.cvv = cvv; }

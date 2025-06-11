@@ -1,68 +1,74 @@
-from botbuilder.dialogs import ComponentDialog, WaterfallDialog, WaterfallStepContext, TextPrompt, ConfirmPrompt, PromptOptions
-from botbuilder.core import MessageFactory, CardFactory
-from botbuilder.schema import HeroCard, CardImage, CardAction, ActionTypes
-
+from botbuilder.dialogs import ComponentDialog, WaterfallDialog, WaterfallStepContext, DialogTurnResult, DialogTurnStatus, TextPrompt
+from botbuilder.dialogs.prompts import PromptOptions
+from botbuilder.core import MessageFactory, CardFactory, UserState
+from botbuilder.schema import HeroCard, CardAction, CardImage, ActionTypes
 from bot.api.product_api import ProductAPI
-
+from bot.dialogs.compra_dialog import ComprarProdutoDialog
 
 class ConsultarProdutosDialog(ComponentDialog):
-    def __init__(self):
-        super(ConsultarProdutosDialog, self).__init__(ConsultarProdutosDialog.__name__)
+    """
+    Diálogo para pesquisar produtos e iniciar compra.
+    """
+    def __init__(self, user_state: UserState):
+        super().__init__(ConsultarProdutosDialog.__name__)
+        self.user_state = user_state
 
-        self.add_dialog(TextPrompt("TextPrompt"))
-        self.add_dialog(ConfirmPrompt("ConfirmPrompt"))
+        # Prompt de texto
+        self.add_dialog(TextPrompt("NomePrompt"))
+        # Sub-diálogo de compra
+        self.add_dialog(ComprarProdutoDialog(user_state))
+        # Waterfall do fluxo de pesquisa
+        self.add_dialog(
+            WaterfallDialog(
+                "PesquisaFlow",
+                [
+                    self.perguntar_nome_produto,
+                    self.exibir_resultados,
+                    self.tratar_selecao
+                ]
+            )
+        )
+        self.initial_dialog_id = "PesquisaFlow"
 
-        self.add_dialog(WaterfallDialog(
-            "ConsultarProdutosDialog",
-            [
-                self.perguntar_nome,
-                self.buscar_produto,
-                self.confirmar_continuar
-            ]
-        ))
-
-        self.initial_dialog_id = "ConsultarProdutosDialog"
-
-    async def perguntar_nome(self, step_context: WaterfallStepContext):
-        return await step_context.prompt(
-            "TextPrompt",
-            PromptOptions(prompt=MessageFactory.text("🛒 Qual produto você deseja consultar?"))
+    async def perguntar_nome_produto(self, step: WaterfallStepContext) -> DialogTurnResult:
+        return await step.prompt(
+            "NomePrompt",
+            PromptOptions(prompt=MessageFactory.text("🛒 Qual produto deseja buscar?"))
         )
 
-    async def buscar_produto(self, step_context: WaterfallStepContext):
-        step_context.values["nome"] = step_context.result
-        nome = step_context.result
-        produtos = ProductAPI().buscar_por_nome(nome)
+    async def exibir_resultados(self, step: WaterfallStepContext) -> DialogTurnResult:
+        nome = step.result
+        produtos = ProductAPI().buscar_produto(nome)
 
         if not produtos:
-            await step_context.context.send_activity("❌ Produto não encontrado.")
+            await step.context.send_activity(f"❌ Não encontrei produtos para '{nome}'.")
         else:
-            for produto in produtos[:3]:
+            for item in produtos[:5]:
                 card = CardFactory.hero_card(
                     HeroCard(
-                        title=produto["productName"],
-                        subtitle=produto["productDescription"],
-                        text=f"💲 Preço: R$ {produto['price']}",
-                        images=[CardImage(url=produto["imageUrl"][0])],
-                        buttons=[CardAction(
-                            type=ActionTypes.im_back,
-                            title=f"Comprar {produto['productName']}",
-                            value=f"Comprar {produto['productName']}"
-                        )]
+                        title=item.get("productName"),
+                        text=f"Preço: R$ {item.get('price', 0.0)}",
+                        images=[CardImage(url=url) for url in item.get("imageUrl", [])],
+                        buttons=[
+                            CardAction(
+                                type=ActionTypes.post_back,
+                                title="Comprar",
+                                value={"action": "buy", "productId": item.get("id")}  
+                            )
+                        ]
                     )
                 )
-                await step_context.context.send_activity(MessageFactory.attachment(card))
+                await step.context.send_activity(MessageFactory.attachment(card))
 
-        return await step_context.prompt(
-            "ConfirmPrompt",
-            PromptOptions(prompt=MessageFactory.text("🔁 Deseja buscar outro produto? (sim/não)"))
-        )
+        # Mantém o diálogo aguardando a próxima atividade do usuário
+        return DialogTurnResult(status=DialogTurnStatus.Waiting, result=step.result)
 
-    async def confirmar_continuar(self, step_context: WaterfallStepContext):
-        resposta = step_context.result
-
-        if resposta:  # True -> sim
-            return await step_context.replace_dialog(self.id)
-        else:
-            await step_context.context.send_activity("👋 Obrigado! Retornando ao menu principal.")
-            return await step_context.end_dialog()
+    async def tratar_selecao(self, step: WaterfallStepContext) -> DialogTurnResult:
+        escolha = step.context.activity.value
+        if isinstance(escolha, dict) and escolha.get("action") == "buy":
+            return await step.begin_dialog(
+                ComprarProdutoDialog.__name__,
+                {"productId": escolha.get("productId")}    
+            )
+        await step.context.send_activity("Compra cancelada ou ação inválida.")
+        return await step.end_dialog()

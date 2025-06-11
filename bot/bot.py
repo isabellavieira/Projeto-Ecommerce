@@ -24,4 +24,4 @@ class MyBot(ActivityHandler):
                 await turn_context.send_activity("Digite a opção desejada:\\n"\
                     "1 - Consultar pedidos \\n" \
                     "2 - Consultar produtos \\n"\
-                    "1 - Extrato de cartão \\n")
+                    "3 - Extrato de cartão \\n")
