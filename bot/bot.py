@@ -3,7 +3,7 @@
 
 from botbuilder.core import ActivityHandler, TurnContext
 from botbuilder.schema import ChannelAccount
-from bot.dialogs.main_dialog import MainDialog
+from .dialogs.main_dialog import MainDialog
 
 
 

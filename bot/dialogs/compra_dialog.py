@@ -1,105 +1,295 @@
-from botbuilder.dialogs import ComponentDialog, WaterfallDialog, WaterfallStepContext, TextPrompt
-from botbuilder.dialogs.prompts import PromptOptions, PromptValidatorContext
+# bot/dialogs/compra_dialog.py
+
+from botbuilder.dialogs import (
+    ComponentDialog,
+    WaterfallDialog,
+    WaterfallStepContext,
+    DialogTurnResult,
+)
+from botbuilder.dialogs.prompts import (
+    TextPrompt,
+    ChoicePrompt,
+    PromptOptions,
+    PromptValidatorContext,
+)
+from botbuilder.dialogs.choices import Choice
 from botbuilder.core import MessageFactory, UserState
 import re
-
 from bot.services.compra_api_client import enviar_compra
 from bot.models.model_produto import ModeloComprarProduto
 
-class ComprarProdutoDialog(ComponentDialog):
-    """
-    Fluxo de coleta de dados para realizar a compra de um produto,
-    com validações e prompts personalizados.
-    """
-    # Defina o ID de waterfall como uma string literal para evitar NameError
-    WATERFALL_ID = "ComprarProdutoDialogFlow"
 
+class ComprarProdutoDialog(ComponentDialog):
     def __init__(self, user_state: UserState):
         super().__init__(ComprarProdutoDialog.__name__)
         self.user_state = user_state
 
-        # Prompts com validação
+        # Prompts de validação
         self.add_dialog(TextPrompt("CartaoPrompt", ComprarProdutoDialog.validar_numero_cartao))
         self.add_dialog(TextPrompt("ExpiracaoPrompt", ComprarProdutoDialog.validar_data_expiracao))
         self.add_dialog(TextPrompt("CvvPrompt", ComprarProdutoDialog.validar_cvv))
         self.add_dialog(TextPrompt("SaldoPrompt", ComprarProdutoDialog.validar_saldo))
 
+        # Prompts de usuário
+        self.add_dialog(TextPrompt("NomePrompt"))
+        self.add_dialog(TextPrompt("EmailPrompt", ComprarProdutoDialog.validar_email))
+        self.add_dialog(TextPrompt("CpfPrompt", ComprarProdutoDialog.validar_cpf))
+        self.add_dialog(TextPrompt("TelefonePrompt"))
+        self.add_dialog(TextPrompt("DtNascimentoPrompt", ComprarProdutoDialog.validar_data_nascimento))
+
+        # Prompts de endereço
+        self.add_dialog(TextPrompt("LogradouroPrompt"))
+        self.add_dialog(TextPrompt("ComplementoPrompt"))
+        self.add_dialog(TextPrompt("BairroPrompt"))
+        self.add_dialog(TextPrompt("CidadePrompt"))
+        self.add_dialog(TextPrompt("EstadoPrompt"))
+        self.add_dialog(TextPrompt("CepPrompt", ComprarProdutoDialog.validar_cep))
+
+        # Prompt pós-compra
+        self.add_dialog(ChoicePrompt("PosCompraPrompt"))
+
         # Sequência de passos
         self.add_dialog(
             WaterfallDialog(
-                ComprarProdutoDialog.WATERFALL_ID,
+                "ComprarFlow",
                 [
                     self.coletar_numero_cartao,
-                    self.coletar_data_expiracao,
+                    self.coletar_validade,
                     self.coletar_cvv,
                     self.coletar_saldo,
-                    self.processar_compra
-                ]
+                    self.coletar_nome,
+                    self.coletar_email,
+                    self.coletar_cpf,
+                    self.coletar_telefone,
+                    self.coletar_dt_nascimento,
+                    self.coletar_logradouro,
+                    self.coletar_complemento,
+                    self.coletar_bairro,
+                    self.coletar_cidade,
+                    self.coletar_estado,
+                    self.coletar_cep,
+                    self.processar_compra,
+                    self.pos_compra_prompt,
+                    self.pos_compra_handle,
+                ],
             )
         )
 
-        self.initial_dialog_id = ComprarProdutoDialog.WATERFALL_ID
+        self.initial_dialog_id = "ComprarFlow"
 
-    async def coletar_numero_cartao(self, step: WaterfallStepContext):
+
+    # 1) Cartão
+    async def coletar_numero_cartao(self, step: WaterfallStepContext) -> DialogTurnResult:
         step.values["productName"] = step.options.get("productName")
         step.values["preco"] = step.options.get("preco", 0.0)
-        return await step.prompt(
-            "CartaoPrompt",
-            PromptOptions(prompt=MessageFactory.text("Digite o número do cartão de crédito:"))
-        )
+        return await step.prompt("CartaoPrompt", PromptOptions(
+            prompt=MessageFactory.text("Digite o número do cartão (13–19 dígitos):")
+        ))
 
-    async def coletar_data_expiracao(self, step: WaterfallStepContext):
-        step.values["numeroCartao"] = step.result
-        return await step.prompt(
-            "ExpiracaoPrompt",
-            PromptOptions(prompt=MessageFactory.text("Data de expiração (MM/AA):"))
-        )
+    async def coletar_validade(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["numero_cartao"] = step.result
+        return await step.prompt("ExpiracaoPrompt", PromptOptions(
+            prompt=MessageFactory.text("Data de expiração (MM/AA):")
+        ))
 
-    async def coletar_cvv(self, step: WaterfallStepContext):
-        step.values["expiracao"] = step.result
-        return await step.prompt(
-            "CvvPrompt",
-            PromptOptions(prompt=MessageFactory.text("Digite o CVV do cartão:"))
-        )
+    async def coletar_cvv(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["validade"] = step.result
+        return await step.prompt("CvvPrompt", PromptOptions(
+            prompt=MessageFactory.text("Digite o CVV (3 ou 4 dígitos):")
+        ))
 
-    async def coletar_saldo(self, step: WaterfallStepContext):
+    async def coletar_saldo(self, step: WaterfallStepContext) -> DialogTurnResult:
         step.values["cvv"] = step.result
-        return await step.prompt(
-            "SaldoPrompt",
-            PromptOptions(prompt=MessageFactory.text("Informe o saldo disponível para simular a compra:"))
-        )
+        return await step.prompt("SaldoPrompt", PromptOptions(
+            prompt=MessageFactory.text("Informe o saldo disponível para simular a compra:")
+        ))
 
-    async def processar_compra(self, step: WaterfallStepContext):
+
+    # 2) Usuário
+    async def coletar_nome(self, step: WaterfallStepContext) -> DialogTurnResult:
         step.values["saldo"] = float(step.result)
+        return await step.prompt("NomePrompt", PromptOptions(
+            prompt=MessageFactory.text("Informe seu nome completo:")
+        ))
 
-        dados = ModeloComprarProduto(
+    async def coletar_email(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["nome"] = step.result
+        return await step.prompt("EmailPrompt", PromptOptions(
+            prompt=MessageFactory.text("Informe seu e-mail:")
+        ))
+
+    async def coletar_cpf(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["email"] = step.result
+        return await step.prompt("CpfPrompt", PromptOptions(
+            prompt=MessageFactory.text("Informe seu CPF (somente números):")
+        ))
+
+    async def coletar_telefone(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["cpf"] = step.result
+        return await step.prompt("TelefonePrompt", PromptOptions(
+            prompt=MessageFactory.text("Informe seu telefone com DDD:")
+        ))
+
+    async def coletar_dt_nascimento(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["telefone"] = step.result
+        return await step.prompt("DtNascimentoPrompt", PromptOptions(
+            prompt=MessageFactory.text("Data de nascimento (YYYY-MM-DD):")
+        ))
+
+
+    # 3) Endereço
+    async def coletar_logradouro(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["dt_nascimento"] = step.result
+        return await step.prompt("LogradouroPrompt", PromptOptions(
+            prompt=MessageFactory.text("Logradouro:")
+        ))
+
+    async def coletar_complemento(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["logradouro"] = step.result
+        return await step.prompt("ComplementoPrompt", PromptOptions(
+            prompt=MessageFactory.text("Complemento (opcional):")
+        ))
+
+    async def coletar_bairro(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["complemento"] = step.result
+        return await step.prompt("BairroPrompt", PromptOptions(
+            prompt=MessageFactory.text("Bairro:")
+        ))
+
+    async def coletar_cidade(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["bairro"] = step.result
+        return await step.prompt("CidadePrompt", PromptOptions(
+            prompt=MessageFactory.text("Cidade:")
+        ))
+
+    async def coletar_estado(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["cidade"] = step.result
+        return await step.prompt("EstadoPrompt", PromptOptions(
+            prompt=MessageFactory.text("Estado (sigla):")
+        ))
+
+    async def coletar_cep(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["estado"] = step.result
+        return await step.prompt("CepPrompt", PromptOptions(
+            prompt=MessageFactory.text("CEP (00000-000):")
+        ))
+
+
+    # 4) Envia ao backend
+    async def processar_compra(self, step: WaterfallStepContext) -> DialogTurnResult:
+        step.values["cep"] = step.result
+        modelo = ModeloComprarProduto(
             product_name=step.values["productName"],
             preco=step.values["preco"],
-            numero_cartao=step.values["numeroCartao"],
-            data_expiracao=step.values["expiracao"],
+            usuario={
+                "nome": step.values["nome"],
+                "email": step.values["email"],
+                "cpf": step.values["cpf"],
+                "telefone": step.values["telefone"],
+                "dtNascimento": step.values["dt_nascimento"],
+            },
+            endereco={
+                "logradouro": step.values["logradouro"],
+                "complemento": step.values["complemento"],
+                "bairro": step.values["bairro"],
+                "cidade": step.values["cidade"],
+                "estado": step.values["estado"],
+                "cep": step.values["cep"],
+            },
+            numero_cartao=step.values["numero_cartao"],
+            data_expiracao=step.values["validade"],
             cvv=step.values["cvv"],
-            saldo=step.values["saldo"]
+            saldo=step.values["saldo"],
         )
+        sucesso, mensagem = await enviar_compra(modelo.to_payload())
+        await step.context.send_activity("✅ Compra efetuada com sucesso!")
+        return await step.next(None)  # avança para prompt pós-compra
 
-        sucesso, mensagem = await enviar_compra(dados.to_payload())
-        await step.context.send_activity(mensagem)
-        return await step.end_dialog()
+
+    # 5) Prompt pós-compra
+    async def pos_compra_prompt(self, step: WaterfallStepContext) -> DialogTurnResult:
+        return await step.prompt("PosCompraPrompt", PromptOptions(
+            prompt=MessageFactory.text("Deseja ver o extrato de compra ou voltar ao menu inicial?"),
+            choices=[Choice("Extrato de Compra"), Choice("Menu Inicial")],
+        ))
+
+    async def pos_compra_handle(self, step: WaterfallStepContext) -> DialogTurnResult:
+        escolha = step.result.value
+        if escolha == "Extrato de Compra":
+            nome   = step.values["nome"]
+            cpf    = step.values["cpf"]
+            email  = step.values["email"]
+            product = step.values["productName"]
+            preco   = step.values["preco"]
+            validade = step.values["validade"]
+            ult4     = step.values["numero_cartao"][-4:]
+            logradouro = step.values["logradouro"]
+            complemento = step.values["complemento"]
+            bairro    = step.values["bairro"]
+            cidade    = step.values["cidade"]
+            cep       = step.values["cep"]
+
+            texto = (
+                f"**👤 Usuário**\n"
+                f"- Nome: {nome}\n"
+                f"- CPF: `{cpf}`\n"
+                f"- E-mail: {email}\n\n"
+
+                f"**🛍️ Pedido**\n"
+                f"- Produto: *{product}*\n"
+                f"- Valor: R$ {preco:.2f}\n\n"
+
+                f"**💳 Cartão**\n"
+                f"- Validade: {validade}\n"
+                f"- Últimos 4 dígitos: `{ult4}`\n\n"
+
+                f"**🏠 Endereço**\n"
+                f"- {logradouro}\n"
+                f"- {complemento}\n"
+                f"- {bairro}\n"
+                f"- {cidade}\n"
+                f"- CEP: {cep}"
+            )
+
+            await step.context.send_activity(MessageFactory.text(texto))
+
+        # em qualquer caso, **volta ao menu inicial**
+        return await step.begin_dialog(MainDialog.__name__)
+
+
+    # Validators estáticos
 
     @staticmethod
-    async def validar_numero_cartao(prompt_context: PromptValidatorContext) -> bool:
-        return bool(re.fullmatch(r"\d{13,19}", prompt_context.recognized.value))
+    async def validar_numero_cartao(pc: PromptValidatorContext) -> bool:
+        return bool(re.fullmatch(r"\d{13,19}", pc.recognized.value))
 
     @staticmethod
-    async def validar_data_expiracao(prompt_context: PromptValidatorContext) -> bool:
-        return bool(re.fullmatch(r"(0[1-9]|1[0-2])/\d{2}$", prompt_context.recognized.value))
+    async def validar_data_expiracao(pc: PromptValidatorContext) -> bool:
+        return bool(re.fullmatch(r"(0[1-9]|1[0-2])/\d{2}$", pc.recognized.value))
 
     @staticmethod
-    async def validar_cvv(prompt_context: PromptValidatorContext) -> bool:
-        return bool(re.fullmatch(r"\d{3,4}", prompt_context.recognized.value))
+    async def validar_cvv(pc: PromptValidatorContext) -> bool:
+        return bool(re.fullmatch(r"\d{3,4}", pc.recognized.value))
 
     @staticmethod
-    async def validar_saldo(prompt_context: PromptValidatorContext) -> bool:
+    async def validar_saldo(pc: PromptValidatorContext) -> bool:
         try:
-            return float(prompt_context.recognized.value) >= 0
+            return float(pc.recognized.value) >= 0
         except:
             return False
+
+    @staticmethod
+    async def validar_email(pc: PromptValidatorContext) -> bool:
+        return bool(re.match(r"[^@]+@[^@]+\.[^@]+", pc.recognized.value))
+
+    @staticmethod
+    async def validar_cpf(pc: PromptValidatorContext) -> bool:
+        return bool(re.fullmatch(r"\d{11}", pc.recognized.value))
+
+    @staticmethod
+    async def validar_data_nascimento(pc: PromptValidatorContext) -> bool:
+        return bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", pc.recognized.value))
+
+    @staticmethod
+    async def validar_cep(pc: PromptValidatorContext) -> bool:
+        return bool(re.fullmatch(r"\d{5}-\d{3}", pc.recognized.value))

@@ -3,7 +3,7 @@ from botbuilder.dialogs.prompts import PromptOptions
 from botbuilder.core import MessageFactory, CardFactory, UserState
 from botbuilder.schema import HeroCard, CardAction, CardImage, ActionTypes
 from bot.api.product_api import ProductAPI
-from bot.dialogs.compra_dialog import ComprarProdutoDialog
+from .compra_dialog import ComprarProdutoDialog
 
 class ConsultarProdutosDialog(ComponentDialog):
     """

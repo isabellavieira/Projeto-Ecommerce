@@ -10,6 +10,8 @@ class ModeloComprarProduto:
         self,
         product_name: str,
         preco: float,
+        usuario: dict,
+        endereco: dict,
         numero_cartao: str,
         data_expiracao: str,
         cvv: str,
@@ -17,6 +19,8 @@ class ModeloComprarProduto:
     ):
         self.product_name = product_name
         self.preco = preco
+        self.usuario = usuario
+        self.endereco = endereco
         self.numero_cartao = numero_cartao
         self.data_expiracao = data_expiracao
         self.cvv = cvv
@@ -30,21 +34,19 @@ class ModeloComprarProduto:
             "productName": self.product_name,
             "preco": self.preco,
             "usuario": {
-                # Dados mock para teste - em produção viriam do userState
-                "nome": "Usuário Teste",
-                "email": "teste@email.com",
-                "cpf": "123.456.789-00",
-                "telefone": "(11) 99999-9999",
-                "dtNascimento": "1990-01-01"
+                "nome": self.usuario.get("nome"),
+                "email": self.usuario.get("email"),
+                "cpf": self.usuario.get("cpf"),
+                "telefone": self.usuario.get("telefone"),
+                "dtNascimento": self.usuario.get("dtNascimento"),
             },
             "endereco": {
-                # Dados mock para teste
-                "logradouro": "Rua Teste",
-                "complemento": "Apto 123",
-                "bairro": "Centro",
-                "cidade": "São Paulo",
-                "estado": "SP",
-                "cep": "01234-567"
+                "logradouro": self.endereco.get("logradouro"),
+                "complemento": self.endereco.get("complemento"),
+                "bairro": self.endereco.get("bairro"),
+                "cidade": self.endereco.get("cidade"),
+                "estado": self.endereco.get("estado"),
+                "cep": self.endereco.get("cep"),
             },
             "cartao": {
                 "numero": self.numero_cartao,
