@@ -60,7 +60,7 @@ class MainDialog(ComponentDialog):
 
     async def on_continue_dialog(self, inner_dc):
         """
-        Intercepta cliques em cards (postBack) e texto livre “Comprar X”.
+        Intercepta cliques em cards (postBack) e texto livre "Comprar X".
         Trata postBack antes de tentar usar .text, que pode ser None.
         """
         activity = inner_dc.context.activity
@@ -75,7 +75,7 @@ class MainDialog(ComponentDialog):
                     "preco": dados.get("price", 0.0),
                 },
             )
-        # 2) Agora protege text de None e trata comandos “comprar ...”
+        # 2) Agora protege text de None e trata comandos "comprar ..."
         text = activity.text or ""
         if text.lower().startswith("comprar "):
             nome = text[8:].strip()

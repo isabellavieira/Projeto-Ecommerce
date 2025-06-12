@@ -19,7 +19,7 @@ public class PedidoController {
 
     // Método para buscar todos os pedidos de um usuário
     @GetMapping("/{usuarioId}")
-    public ResponseEntity<List<Pedido>> obterPedidosPorUsuario(@PathVariable("usuarioId") String usuarioId) {
+    public ResponseEntity<List<Pedido>> obterPedidosPorUsuario(@PathVariable("usuarioId") int usuarioId) {
         List<Pedido> pedidos = pedidoRepository.findByUsuarioId(usuarioId);
         if (pedidos.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

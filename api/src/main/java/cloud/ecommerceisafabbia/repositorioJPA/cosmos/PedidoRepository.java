@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface PedidoRepository extends CosmosRepository<Pedido, String> {
     // Método customizado para buscar pedidos por usuário
-    List<Pedido> findByUsuarioId(String usuarioId);
+    List<Pedido> findByUsuarioId(int usuarioId);
 }

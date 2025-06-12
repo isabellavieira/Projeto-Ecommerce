@@ -1,6 +1,7 @@
 package cloud.ecommerceisafabbia.request;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class UsuarioRequest {
     private String nome;
@@ -36,10 +37,24 @@ public class UsuarioRequest {
     public void setTelefone(String telefone) {
         this.telefone = telefone;
     }
+    
     public LocalDate getDtNascimento() {
-    return dtNascimento;
-}
+        return dtNascimento;
+    }
+    
     public void setDtNascimento(LocalDate dtNascimento) {
-    this.dtNascimento = dtNascimento;
-}
+        this.dtNascimento = dtNascimento;
+    }
+    
+    // Setter adicional para aceitar string e converter para LocalDate
+    public void setDtNascimento(String dtNascimento) {
+        if (dtNascimento != null && !dtNascimento.trim().isEmpty()) {
+            try {
+                this.dtNascimento = LocalDate.parse(dtNascimento, DateTimeFormatter.ISO_LOCAL_DATE);
+            } catch (Exception e) {
+                // Se falhar o parse, usa data padrão
+                this.dtNascimento = LocalDate.of(1990, 1, 1);
+            }
+        }
+    }
 }

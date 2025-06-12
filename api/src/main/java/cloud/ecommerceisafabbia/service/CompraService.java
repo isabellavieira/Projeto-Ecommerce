@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.time.LocalDate;
 
 @Service
 public class CompraService {
@@ -63,6 +64,9 @@ public class CompraService {
         usuario.setTelefone(usuarioReq.getTelefone());
         if (usuarioReq.getDtNascimento() != null) {
             usuario.setDtNascimento(usuarioReq.getDtNascimento());
+        } else {
+            // Fallback para data padrão se não for fornecida
+            usuario.setDtNascimento(LocalDate.of(1990, 1, 1));
         }
         usuarioRepo.save(usuario);
 

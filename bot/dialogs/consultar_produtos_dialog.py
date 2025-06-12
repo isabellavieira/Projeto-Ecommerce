@@ -53,7 +53,11 @@ class ConsultarProdutosDialog(ComponentDialog):
                             CardAction(
                                 type=ActionTypes.post_back,
                                 title="Comprar",
-                                value={"action": "buy", "productId": item.get("id")}  
+                                value={
+                                    "action": "buy", 
+                                    "productName": item.get("productName"),
+                                    "price": item.get("price", 0.0)
+                                }  
                             )
                         ]
                     )

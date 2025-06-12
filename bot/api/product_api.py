@@ -1,3 +1,4 @@
+import requests
 from azure.cosmos import CosmosClient
 from bot.config import DefaultConfig
 from bot.api.cosmos_connector import container
@@ -9,13 +10,14 @@ container = db.get_container_client(config.CONTAINER_NAME)
 class ProductAPI:
     def __init__(self):
         self.config = DefaultConfig()
-        self.base_url = f"{self.config.URL_PREFIX}/products"
+        self.base_url = f"{self.config.URL_PREFIX}/produtos"
 
     def get_products(self):
         response = requests.get(self.base_url)
         if response.status_code == 200:
             return response.json()
         return None
+    
     def buscar_produto(self, nome):
         try:
             query = "SELECT * FROM c WHERE CONTAINS(c.productName, @nome)"
@@ -25,3 +27,7 @@ class ProductAPI:
         except Exception as e:
             print(f"Erro ao consultar Cosmos DB: {e}")
             return []
+    
+    def buscar_por_nome(self, nome):
+        """Alias para buscar_produto para manter compatibilidade"""
+        return self.buscar_produto(nome)

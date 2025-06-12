@@ -41,7 +41,8 @@ class ComprarProdutoDialog(ComponentDialog):
         self.initial_dialog_id = ComprarProdutoDialog.WATERFALL_ID
 
     async def coletar_numero_cartao(self, step: WaterfallStepContext):
-        step.values["productId"] = step.options.get("productId")
+        step.values["productName"] = step.options.get("productName")
+        step.values["preco"] = step.options.get("preco", 0.0)
         return await step.prompt(
             "CartaoPrompt",
             PromptOptions(prompt=MessageFactory.text("Digite o número do cartão de crédito:"))
@@ -72,7 +73,8 @@ class ComprarProdutoDialog(ComponentDialog):
         step.values["saldo"] = float(step.result)
 
         dados = ModeloComprarProduto(
-            product_id=step.values["productId"],
+            product_name=step.values["productName"],
+            preco=step.values["preco"],
             numero_cartao=step.values["numeroCartao"],
             data_expiracao=step.values["expiracao"],
             cvv=step.values["cvv"],
