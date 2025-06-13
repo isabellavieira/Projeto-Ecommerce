@@ -106,7 +106,7 @@ public class CompraService {
 
     @Transactional
     public String processarCompra(CompraRequest request, String idPedido) {
-        // 🧠 Produto (CosmosDB)
+        // Produto (CosmosDB)
         Produto produto = produtoRepo.findByProductName(request.getProductName())
                 .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente!"));
 
@@ -114,13 +114,13 @@ public class CompraService {
             throw new IllegalArgumentException("Preço divergente");
         }
 
-        // 🧠 Validação de saldo
+        // Validação de saldo
         CartaoRequest cartaoDTO = request.getCartao();
         if (cartaoDTO.getSaldo() < produto.getPrice()) {
             throw new IllegalArgumentException("Saldo insuficiente no cartão");
         }
 
-        // 🧠 Cria e salva usuário
+        // Cria e salva usuário
         UsuarioRequest usuarioReq = request.getUsuario();
         Usuario usuario = new Usuario();
         usuario.setNome(usuarioReq.getNome());
@@ -130,7 +130,7 @@ public class CompraService {
         usuario.setDtNascimento(usuarioReq.getDtNascimento());
         usuarioRepo.save(usuario);
 
-        // 🧠 Cria e salva endereço
+        // Cria e salva endereço
         EnderecoRequest enderecoReq = request.getEndereco();
         Endereco endereco = new Endereco();
         endereco.setUsuario(usuario);
@@ -142,7 +142,7 @@ public class CompraService {
         endereco.setCep(enderecoReq.getCep());
         enderecoRepo.save(endereco);
 
-        // 🧠 Cria e salva cartão
+        // Cria e salva cartão
         Cartao cartao = new Cartao();
         cartao.setUsuario(usuario);
         cartao.setNumero(cartaoDTO.getNumero());
@@ -151,7 +151,7 @@ public class CompraService {
         cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPrice());
         cartaoRepo.save(cartao);
 
-        // 🧠 Salvar pedido no Cosmos DB
+        // Salvar pedido no Cosmos DB
         Pedido pedido = new Pedido();
         pedido.setId(idPedido); // Usa o ID fornecido
         pedido.setProductName(produto.getProductName());
