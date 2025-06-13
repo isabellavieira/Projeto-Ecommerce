@@ -5,27 +5,18 @@ from urllib import response
 from botbuilder.core import ActivityHandler, TurnContext
 from botbuilder.schema import ChannelAccount
 
-import uuid
-
 
 class MyBot(ActivityHandler):
     # See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
 
     async def on_message_activity(self, turn_context: TurnContext):
-        # Processa a mensagem do usuário
         user_message = turn_context.activity.text
-        await turn_context.send_activity(f"You said '{user_message}'")
+        response = await enviar_compra(payload)  # Função que envia o payload ao backend.
 
-        # Gerando um ID único para o pedido
-        order_id = str(uuid.uuid4())
-
-        # Resposta com o ID de pedido
-        response_message = (
-            f"Compra realizada com sucesso! Seu ID de pedido é: {order_id}.\n"
-        )
-
-        # Enviando a resposta com o ID de pedido para o usuário
-        await turn_context.send_activity(response_message)
+        if response.get("sucesso"):
+            await turn_context.send_activity("Compra realizada com sucesso!")
+        else:
+            await turn_context.send_activity(f"Erro: {response.get('mensagem')}")
 
     async def on_members_added_activity(
         self,

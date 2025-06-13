@@ -1,8 +1,8 @@
 package cloud.ecommerceisafabbia.service;
 
 import cloud.ecommerceisafabbia.objetosmodelo.Usuario;
-import cloud.ecommerceisafabbia.objetosmodelo.Endereco;
 import cloud.ecommerceisafabbia.objetosmodelo.Cartao;
+import cloud.ecommerceisafabbia.objetosmodelo.Endereco;
 import cloud.ecommerceisafabbia.objetosmodelo.Produto;
 import cloud.ecommerceisafabbia.objetosmodelo.Pedido;
 
@@ -62,12 +62,7 @@ public class CompraService {
         usuario.setEmail(usuarioReq.getEmail());
         usuario.setCpf(usuarioReq.getCpf());
         usuario.setTelefone(usuarioReq.getTelefone());
-        if (usuarioReq.getDtNascimento() != null) {
-            usuario.setDtNascimento(usuarioReq.getDtNascimento());
-        } else {
-            // Fallback para data padrão se não for fornecida
-            usuario.setDtNascimento(LocalDate.of(1990, 1, 1));
-        }
+        usuario.setDtNascimento(usuarioReq.getDtNascimento());
         usuarioRepo.save(usuario);
 
         // 🧠 Cria e salva endereço
@@ -82,20 +77,18 @@ public class CompraService {
         endereco.setCep(enderecoReq.getCep());
         enderecoRepo.save(endereco);
 
-        // 🧠 Cria e salva cartão: parse MM/yy
+        // 🧠 Cria e salva cartão
         Cartao cartao = new Cartao();
         cartao.setUsuario(usuario);
         cartao.setNumero(cartaoDTO.getNumero());
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM/yy");
-        YearMonth ym = YearMonth.parse(cartaoDTO.getValidade(), fmt);
-        cartao.setDtExpiracao(ym.atDay(1)); // usa o primeiro dia do mês
+        cartao.setDtExpiracao(YearMonth.parse(cartaoDTO.getValidade(), DateTimeFormatter.ofPattern("MM/yy")).atDay(1));
         cartao.setCvv(cartaoDTO.getCvv());
         cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPrice());
         cartaoRepo.save(cartao);
 
         // 🧠 Salvar pedido no Cosmos DB
         Pedido pedido = new Pedido();
-        pedido.setId(UUID.randomUUID().toString());  // Gerando ID único do pedido
+        pedido.setId(UUID.randomUUID().toString()); // Gerando ID único do pedido
         pedido.setProductName(produto.getProductName());
         pedido.setPreco(produto.getPrice());
         pedido.setUsuarioId(usuario.getId());
@@ -103,7 +96,67 @@ public class CompraService {
         pedido.setStatus("Concluída");
         pedidoRepository.save(pedido);
 
-        // Retornar o ID do pedido como parte da resposta
-        return "Compra realizada com sucesso! Seu ID de pedido é: " + pedido.getId();
+        // Retornar o ID do pedido gerado no Cosmos DB
+        return pedido.getId();
+    }
+
+    @Transactional
+    public String processarCompra(CompraRequest request, String idPedido) {
+        // 🧠 Produto (CosmosDB)
+        Produto produto = produtoRepo.findByProductName(request.getProductName())
+                .orElseThrow(() -> new IllegalArgumentException("Produto inválido ou inexistente!"));
+
+        if (produto.getPrice() != request.getPreco()) {
+            throw new IllegalArgumentException("Preço divergente");
+        }
+
+        // 🧠 Validação de saldo
+        CartaoRequest cartaoDTO = request.getCartao();
+        if (cartaoDTO.getSaldo() < produto.getPrice()) {
+            throw new IllegalArgumentException("Saldo insuficiente no cartão");
+        }
+
+        // 🧠 Cria e salva usuário
+        UsuarioRequest usuarioReq = request.getUsuario();
+        Usuario usuario = new Usuario();
+        usuario.setNome(usuarioReq.getNome());
+        usuario.setEmail(usuarioReq.getEmail());
+        usuario.setCpf(usuarioReq.getCpf());
+        usuario.setTelefone(usuarioReq.getTelefone());
+        usuario.setDtNascimento(usuarioReq.getDtNascimento());
+        usuarioRepo.save(usuario);
+
+        // 🧠 Cria e salva endereço
+        EnderecoRequest enderecoReq = request.getEndereco();
+        Endereco endereco = new Endereco();
+        endereco.setUsuario(usuario);
+        endereco.setLogradouro(enderecoReq.getLogradouro());
+        endereco.setComplemento(enderecoReq.getComplemento());
+        endereco.setBairro(enderecoReq.getBairro());
+        endereco.setCidade(enderecoReq.getCidade());
+        endereco.setEstado(enderecoReq.getEstado());
+        endereco.setCep(enderecoReq.getCep());
+        enderecoRepo.save(endereco);
+
+        // 🧠 Cria e salva cartão
+        Cartao cartao = new Cartao();
+        cartao.setUsuario(usuario);
+        cartao.setNumero(cartaoDTO.getNumero());
+        cartao.setDtExpiracao(YearMonth.parse(cartaoDTO.getValidade(), DateTimeFormatter.ofPattern("MM/yy")).atDay(1));
+        cartao.setCvv(cartaoDTO.getCvv());
+        cartao.setSaldo(cartaoDTO.getSaldo() - produto.getPrice());
+        cartaoRepo.save(cartao);
+
+        // 🧠 Salvar pedido no Cosmos DB
+        Pedido pedido = new Pedido();
+        pedido.setId(idPedido); // Usa o ID fornecido
+        pedido.setProductName(produto.getProductName());
+        pedido.setPreco(produto.getPrice());
+        pedido.setUsuarioId(usuario.getId());
+        pedido.setDataTransacao(LocalDateTime.now());
+        pedido.setStatus("Concluída");
+        pedidoRepository.save(pedido);
+
+        return idPedido; // Retorna o ID do pedido
     }
 }

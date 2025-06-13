@@ -5,10 +5,6 @@ import cloud.ecommerceisafabbia.service.CompraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import cloud.ecommerceisafabbia.request.UsuarioRequest;
-import cloud.ecommerceisafabbia.request.EnderecoRequest;
-import cloud.ecommerceisafabbia.request.CartaoRequest;
-
 
 @RestController
 @RequestMapping("/api/compras")
@@ -20,22 +16,23 @@ public class CompraController {
     @PostMapping
     public ResponseEntity<?> realizarCompra(@RequestBody CompraRequest request) {
         try {
-            String mensagem = compraService.processarCompra(request);
-            return ResponseEntity.ok().body(new ResponseDTO(true, mensagem));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ResponseDTO(false, e.getMessage()));
+            String idPedido = compraService.processarCompra(request);
+            return ResponseEntity.ok().body(new ResponseDTO(true, "Compra realizada com sucesso!", idPedido));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(new ResponseDTO(false, "Erro interno: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(new ResponseDTO(false, "Erro interno: " + e.getMessage(), null));
         }
     }
 
     static class ResponseDTO {
         private boolean sucesso;
         private String mensagem;
+        private String idPedido;
 
-        public ResponseDTO(boolean sucesso, String mensagem) {
+        public ResponseDTO(boolean sucesso, String mensagem, String idPedido) {
             this.sucesso = sucesso;
             this.mensagem = mensagem;
+            this.idPedido = idPedido;
         }
 
         public boolean isSucesso() {
@@ -52,6 +49,14 @@ public class CompraController {
 
         public void setMensagem(String mensagem) {
             this.mensagem = mensagem;
+        }
+
+        public String getIdPedido() {
+            return idPedido;
+        }
+
+        public void setIdPedido(String idPedido) {
+            this.idPedido = idPedido;
         }
     }
 }

@@ -1,8 +1,9 @@
 package cloud.ecommerceisafabbia.repositorioJPA;
 
-import cloud.ecommerceisafabbia.objetosmodelo.Cartao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import cloud.ecommerceisafabbia.objetosmodelo.Cartao;
 
 @Repository
 public interface CartaoRepository extends JpaRepository<Cartao, Integer> {

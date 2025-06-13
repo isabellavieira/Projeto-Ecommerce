@@ -18,6 +18,7 @@ from botbuilder.core import MessageFactory, UserState
 import re
 from bot.services.compra_api_client import enviar_compra
 from bot.models.model_produto import ModeloComprarProduto
+import uuid
 
 
 class ComprarProdutoDialog(ComponentDialog):
@@ -88,21 +89,24 @@ class ComprarProdutoDialog(ComponentDialog):
         ))
 
     async def coletar_validade(self, step: WaterfallStepContext) -> DialogTurnResult:
+        # Salva o número do cartão coletado
         step.values["numero_cartao"] = step.result
+
+        # Solicita a data de validade
         return await step.prompt("ExpiracaoPrompt", PromptOptions(
-            prompt=MessageFactory.text("Data de expiração (MM/AA):")
+            prompt=MessageFactory.text("Digite a data de validade do cartão (MM/yy):")
         ))
 
     async def coletar_cvv(self, step: WaterfallStepContext) -> DialogTurnResult:
-        step.values["validade"] = step.result
+        step.values["validade"] = step.result  # Salva a validade do cartão
         return await step.prompt("CvvPrompt", PromptOptions(
             prompt=MessageFactory.text("Digite o CVV (3 ou 4 dígitos):")
         ))
 
     async def coletar_saldo(self, step: WaterfallStepContext) -> DialogTurnResult:
-        step.values["cvv"] = step.result
+        step.values["cvv"] = step.result  # Salva o CVV
         return await step.prompt("SaldoPrompt", PromptOptions(
-            prompt=MessageFactory.text("Informe o saldo disponível para simular a compra:")
+            prompt=MessageFactory.text("Digite o saldo disponível no cartão:")
         ))
 
 
@@ -175,6 +179,10 @@ class ComprarProdutoDialog(ComponentDialog):
             prompt=MessageFactory.text("CEP (00000-000):")
         ))
 
+    '''async def coletar_endereco(self, step: WaterfallStepContext) -> DialogTurnResult:
+        await step.context.send_activity("O campo 'complemento' é opcional.")
+        return await step.next()'''
+
 
     # 4) Envia ao backend
     async def processar_compra(self, step: WaterfallStepContext) -> DialogTurnResult:
@@ -202,10 +210,16 @@ class ComprarProdutoDialog(ComponentDialog):
             cvv=step.values["cvv"],
             saldo=step.values["saldo"],
         )
-        sucesso, mensagem, order_id = await enviar_compra(modelo.to_payload())  # Alteração para pegar o ID do pedido
-        step.values["order_id"] = order_id  # Salvando o ID do pedido no step.values
-        await step.context.send_activity("✅ Compra efetuada com sucesso!")
-        return await step.next(None)  # avança para prompt pós-compra
+
+        sucesso, mensagem, idPedido = await enviar_compra(modelo.to_payload())
+        step.values["idPedido"] = idPedido
+
+        if sucesso:
+            await step.context.send_activity(f"✅ {mensagem} ID do Pedido: {idPedido}")
+        else:
+            await step.context.send_activity(f"❌ {mensagem}")
+
+        return await step.next(None)
 
 
     # 5) Prompt pós-compra
@@ -217,49 +231,32 @@ class ComprarProdutoDialog(ComponentDialog):
 
     async def pos_compra_handle(self, step: WaterfallStepContext) -> DialogTurnResult:
         escolha = step.result.value
+        idPedido = step.values["idPedido"]  # Recupera o ID do pedido
+
         if escolha == "Extrato de Compra":
-            nome   = step.values["nome"]
-            cpf    = step.values["cpf"]
-            email  = step.values["email"]
-            product = step.values["productName"]
-            preco   = step.values["preco"]
-            validade = step.values["validade"]
-            ult4     = step.values["numero_cartao"][-4:]
-            logradouro = step.values["logradouro"]
-            complemento = step.values["complemento"]
-            bairro    = step.values["bairro"]
-            cidade    = step.values["cidade"]
-            cep       = step.values["cep"]
-            order_id = step.values["order_id"]  # Pegando o ID do pedido da variável do step
+            # Gera e exibe o extrato com o ID do pedido
+            extrato = (
+                f"**👤 Usuário**\n"
+                f"- Nome: {step.values['nome']}\n"
+                f"- CPF: `{step.values['cpf']}`\n"
+                f"- E-mail: {step.values['email']}\n\n"
+                f"**🛍️ Pedido**\n"
+                f"- Produto: *{step.values['productName']}*\n"
+                f"- Valor: R$ {step.values['preco']:.2f}\n"
+                f"- ID do Pedido: `{idPedido}`\n\n"
+                f"**💳 Cartão**\n"
+                f"- Validade: {step.values['validade']}\n"
+                f"- Últimos 4 dígitos: `{step.values['numero_cartao'][-4:]}`\n\n"
+                f"**🏠 Endereço**\n"
+                f"- {step.values['logradouro']}\n"
+                f"- {step.values['complemento']}\n"
+                f"- {step.values['bairro']}\n"
+                f"- {step.values['cidade']}\n"
+                f"- CEP: {step.values['cep']}"
+            )
+            await step.context.send_activity(MessageFactory.text(extrato))
 
-        texto = (
-            f"**👤 Usuário**\n"
-            f"- Nome: {nome}\n"
-            f"- CPF: `{cpf}`\n"
-            f"- E-mail: {email}\n\n"
-
-            f"**🛍️ Pedido**\n"
-            f"- Produto: *{product}*\n"
-            f"- Valor: R$ {preco:.2f}\n\n"
-            f"- ID do Pedido: `{order_id}`\n\n"  # Adicionando o ID do pedido
-
-            f"**💳 Cartão**\n"
-            f"- Validade: {validade}\n"
-            f"- Últimos 4 dígitos: `{ult4}`\n\n"
-
-            f"**🏠 Endereço**\n"
-            f"- {logradouro}\n"
-            f"- {complemento}\n"
-            f"- {bairro}\n"
-            f"- {cidade}\n"
-            f"- CEP: {cep}"
-        )
-
-        await step.context.send_activity(MessageFactory.text(texto))
-
-        # em qualquer caso, **volta ao menu inicial**
-        from .main_dialog import MainDialog
-        return await step.begin_dialog(MainDialog.__name__)
+        return await step.end_dialog()
 
 
     # Validators estáticos
