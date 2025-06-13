@@ -95,7 +95,7 @@ public class CompraService {
 
         // 🧠 Salvar pedido no Cosmos DB
         Pedido pedido = new Pedido();
-        pedido.setId(UUID.randomUUID().toString());
+        pedido.setId(UUID.randomUUID().toString());  // Gerando ID único do pedido
         pedido.setProductName(produto.getProductName());
         pedido.setPreco(produto.getPrice());
         pedido.setUsuarioId(usuario.getId());
@@ -103,6 +103,7 @@ public class CompraService {
         pedido.setStatus("Concluída");
         pedidoRepository.save(pedido);
 
-        return "Compra realizada com sucesso!";
+        // Retornar o ID do pedido como parte da resposta
+        return "Compra realizada com sucesso! Seu ID de pedido é: " + pedido.getId();
     }
 }
