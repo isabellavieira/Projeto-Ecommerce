@@ -4,8 +4,8 @@ import os
 import sys
 import traceback
 from datetime import datetime
-from .bots.dialog_bot import DialogBot
-from .dialogs.main_dialog import MainDialog
+from bot.bots.dialog_bot import DialogBot
+from bot.dialogs.main_dialog import MainDialog
 from .config import DefaultConfig
 from aiohttp import web
 from aiohttp.web import Request, Response, json_response

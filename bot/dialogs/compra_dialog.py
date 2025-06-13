@@ -1,5 +1,6 @@
 # bot/dialogs/compra_dialog.py
 
+
 from botbuilder.dialogs import (
     ComponentDialog,
     WaterfallDialog,
@@ -201,7 +202,8 @@ class ComprarProdutoDialog(ComponentDialog):
             cvv=step.values["cvv"],
             saldo=step.values["saldo"],
         )
-        sucesso, mensagem = await enviar_compra(modelo.to_payload())
+        sucesso, mensagem, order_id = await enviar_compra(modelo.to_payload())  # Alteração para pegar o ID do pedido
+        step.values["order_id"] = order_id  # Salvando o ID do pedido no step.values
         await step.context.send_activity("✅ Compra efetuada com sucesso!")
         return await step.next(None)  # avança para prompt pós-compra
 
@@ -228,32 +230,35 @@ class ComprarProdutoDialog(ComponentDialog):
             bairro    = step.values["bairro"]
             cidade    = step.values["cidade"]
             cep       = step.values["cep"]
+            order_id = step.values["order_id"]  # Pegando o ID do pedido da variável do step
 
-            texto = (
-                f"**👤 Usuário**\n"
-                f"- Nome: {nome}\n"
-                f"- CPF: `{cpf}`\n"
-                f"- E-mail: {email}\n\n"
+        texto = (
+            f"**👤 Usuário**\n"
+            f"- Nome: {nome}\n"
+            f"- CPF: `{cpf}`\n"
+            f"- E-mail: {email}\n\n"
 
-                f"**🛍️ Pedido**\n"
-                f"- Produto: *{product}*\n"
-                f"- Valor: R$ {preco:.2f}\n\n"
+            f"**🛍️ Pedido**\n"
+            f"- Produto: *{product}*\n"
+            f"- Valor: R$ {preco:.2f}\n\n"
+            f"- ID do Pedido: `{order_id}`\n\n"  # Adicionando o ID do pedido
 
-                f"**💳 Cartão**\n"
-                f"- Validade: {validade}\n"
-                f"- Últimos 4 dígitos: `{ult4}`\n\n"
+            f"**💳 Cartão**\n"
+            f"- Validade: {validade}\n"
+            f"- Últimos 4 dígitos: `{ult4}`\n\n"
 
-                f"**🏠 Endereço**\n"
-                f"- {logradouro}\n"
-                f"- {complemento}\n"
-                f"- {bairro}\n"
-                f"- {cidade}\n"
-                f"- CEP: {cep}"
-            )
+            f"**🏠 Endereço**\n"
+            f"- {logradouro}\n"
+            f"- {complemento}\n"
+            f"- {bairro}\n"
+            f"- {cidade}\n"
+            f"- CEP: {cep}"
+        )
 
-            await step.context.send_activity(MessageFactory.text(texto))
+        await step.context.send_activity(MessageFactory.text(texto))
 
         # em qualquer caso, **volta ao menu inicial**
+        from .main_dialog import MainDialog
         return await step.begin_dialog(MainDialog.__name__)
 
 
