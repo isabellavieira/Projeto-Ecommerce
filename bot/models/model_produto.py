@@ -27,9 +27,6 @@ class ModeloComprarProduto:
         self.saldo = saldo
 
     def to_payload(self) -> dict:
-        """
-        Constrói o corpo de requisição conforme o DTO CompraRequest do back-end Java.
-        """
         return {
             "productName": self.product_name,
             "preco": self.preco,

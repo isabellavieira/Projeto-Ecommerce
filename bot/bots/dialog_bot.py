@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+from botbuilder.core import MessageFactory  # Importação necessária
 from botbuilder.core import ActivityHandler, ConversationState, TurnContext, UserState
 from botbuilder.dialogs import Dialog
 from bot.helpers.dialog_helper import DialogHelper
-from botbuilder.schema import ChannelAccount
+from botbuilder.schema import ChannelAccount, SuggestedActions, CardAction
 
 
 class DialogBot(ActivityHandler):
@@ -56,4 +57,15 @@ class DialogBot(ActivityHandler):
     ):
         for member in members_added:
             if member.id != turn_context.activity.recipient.id:
-                await turn_context.send_activity("Olá, posso te ajudar a comprar algo?")
+                await turn_context.send_activity("Olá, bem-vindo ao Bot Ecommerce IsaFabBia!")
+
+                # Envia botões interativos
+                await turn_context.send_activity(
+                    MessageFactory.suggested_actions(
+                        actions=[
+                            CardAction(title="Consultar Pedidos", type="imBack", value="Consultar Pedidos"),
+                            CardAction(title="Consultar Produtos", type="imBack", value="Consultar Produtos")
+                        ],
+                        text="Escolha uma opção:"
+                    )
+                )

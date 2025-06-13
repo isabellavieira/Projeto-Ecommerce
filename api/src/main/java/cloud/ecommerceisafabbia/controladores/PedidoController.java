@@ -9,21 +9,36 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/pedidos")
+@RequestMapping("/api/pedidos")
 public class PedidoController {
 
     @Autowired
     private PedidoRepository pedidoRepository;
 
-    // Método para buscar todos os pedidos de um usuário
-    @GetMapping("/{usuarioId}")
-    public ResponseEntity<List<Pedido>> obterPedidosPorUsuario(@PathVariable("usuarioId") int usuarioId) {
-        List<Pedido> pedidos = pedidoRepository.findByUsuarioId(usuarioId);
-        if (pedidos.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    // Endpoint para consultar pedido por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> consultarPedidoPorId(@PathVariable String id) {
+        Optional<Pedido> pedido = pedidoRepository.findById(id);
+
+        if (pedido.isPresent()) {
+            return ResponseEntity.ok(pedido.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pedido não encontrado.");
         }
-        return new ResponseEntity<>(pedidos, HttpStatus.OK);
+    }
+
+    // Endpoint para obter pedidos por usuário
+    @GetMapping("/usuario/{id}")
+    public ResponseEntity<?> obterPedidosPorUsuario(@PathVariable int id) {
+        List<Pedido> pedidos = pedidoRepository.findByUsuarioId(id);
+
+        if (!pedidos.isEmpty()) {
+            return ResponseEntity.ok(pedidos);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum pedido encontrado para este usuário.");
+        }
     }
 }

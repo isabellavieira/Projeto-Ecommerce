@@ -1,9 +1,8 @@
+from botbuilder.core import UserState
 from botbuilder.dialogs import ComponentDialog, WaterfallDialog, WaterfallStepContext, DialogTurnResult
-from botbuilder.dialogs.prompts import ChoicePrompt, PromptOptions
-from botbuilder.dialogs.choices import Choice
-from botbuilder.core import MessageFactory, UserState
-
-from bot.api.product_api import ProductAPI
+from botbuilder.dialogs.prompts import TextPrompt, PromptOptions
+from botbuilder.core import MessageFactory
+from bot.dialogs.consultar_pedidos_dialog import ConsultarPedidosDialog
 from bot.dialogs.consultar_produtos_dialog import ConsultarProdutosDialog
 from bot.dialogs.compra_dialog import ComprarProdutoDialog
 
@@ -15,48 +14,46 @@ class MainDialog(ComponentDialog):
     MAIN_WATERFALL = "MAIN_WATERFALL"
 
     def __init__(self, user_state: UserState):
-        super().__init__(MainDialog.__name__)
+        super(MainDialog, self).__init__(MainDialog.__name__)
 
-        # Property para armazenar perfil (não usado aqui mas mantido)
-        self.profile_accessor = user_state.create_property("UserProfile")
+        self.add_dialog(TextPrompt("TextPrompt"))  # Adiciona o diálogo TextPrompt
+        self.add_dialog(ConsultarPedidosDialog("ConsultarPedidosDialog"))
+        self.add_dialog(ConsultarProdutosDialog("ConsultarProdutosDialog"))
+        self.add_dialog(ComprarProdutoDialog("ComprarProdutoDialog"))
+        self.add_dialog(WaterfallDialog(self.MAIN_WATERFALL, [
+            self.prompt_for_action,
+            self.handle_action_selection
+        ]))
 
-        # Sub-diálogos
-        self.add_dialog(ConsultarProdutosDialog(user_state))
-        self.add_dialog(ComprarProdutoDialog(user_state))
-
-        # Prompt de escolha
-        self.add_dialog(ChoicePrompt(ChoicePrompt.__name__))
-
-        # Waterfall principal
-        self.add_dialog(
-            WaterfallDialog(
-                MainDialog.MAIN_WATERFALL,
-                [
-                    self.prompt_for_action,
-                    self.handle_action_selection
-                ]
-            )
-        )
-
-        self.initial_dialog_id = MainDialog.MAIN_WATERFALL
+        self.initial_dialog_id = self.MAIN_WATERFALL
 
     async def prompt_for_action(self, step_context: WaterfallStepContext) -> DialogTurnResult:
-        """Exibe o menu de ações."""
-        choices = [Choice("Consultar Produtos")]
+        # Envia botões interativos para o usuário
         return await step_context.prompt(
-            ChoicePrompt.__name__,
+            "TextPrompt",
             PromptOptions(
-                prompt=MessageFactory.text("Selecione uma opção:"),
-                choices=choices
+                prompt=MessageFactory.suggested_actions(
+                    actions=[
+                        {"title": "Consultar Pedidos", "type": "imBack", "value": "Consultar Pedidos"},
+                        {"title": "Consultar Produtos", "type": "imBack", "value": "Consultar Produtos"}
+                    ],
+                    text="Escolha uma opção:"
+                )
             )
         )
 
     async def handle_action_selection(self, step_context: WaterfallStepContext) -> DialogTurnResult:
-        """Despacha para o diálogo de produtos."""
-        choice = step_context.result.value
-        if choice == "Consultar Produtos":
-            return await step_context.begin_dialog(ConsultarProdutosDialog.__name__)
-        return await step_context.end_dialog()
+        escolha = step_context.context.activity.text  # Captura o texto enviado pelo botão
+
+        if escolha == "Consultar Pedidos":
+            return await step_context.begin_dialog("ConsultarPedidosDialog")
+        elif escolha == "Consultar Produtos":
+            return await step_context.begin_dialog("ConsultarProdutosDialog")
+        elif escolha == "Menu Inicial":
+            return await step_context.replace_dialog("MainDialog")  # Reinicia o fluxo
+        else:
+            await step_context.context.send_activity("Opção inválida. Por favor, tente novamente.")
+            return await step_context.replace_dialog("MainDialog")
 
     async def on_continue_dialog(self, inner_dc):
         """
